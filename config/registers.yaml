@@ -1,0 +1,313 @@
+registers:
+  - address: 2002
+    type: int16
+    mode: holding
+    initial_value: 37
+  - address: 2050
+    type: int16
+    mode: holding
+    initial_value: 92
+  - address: 5004
+    type: int16
+    mode: holding
+    initial_value: 13
+  - address: 1011
+    type: int16
+    mode: holding
+    initial_value: 65
+  - address: 0
+    type: int16
+    mode: holding
+    initial_value: 44
+  - address: 1
+    type: uint16
+    mode: holding
+    initial_value: 81
+  - address: 2
+    type: int16
+    mode: holding
+    initial_value: 7
+  - address: 3
+    type: int16
+    mode: holding
+    initial_value: 56
+  - address: 4
+    type: int16
+    mode: holding
+    initial_value: 99
+  - address: 100
+    type: int16
+    mode: holding
+    initial_value: 24
+  - address: 101
+    type: uint16
+    mode: holding
+    initial_value: 68
+  - address: 102
+    type: int16
+    mode: holding
+    initial_value: 53
+  - address: 103
+    type: int16
+    mode: holding
+    initial_value: 12
+  - address: 104
+    type: int16
+    mode: holding
+    initial_value: 77
+  - address: 1020
+    type: uint32
+    mode: holding
+    initial_value: 41
+  - address: 1022
+    type: uint32
+    mode: holding
+    initial_value: 85
+  - address: 1000
+    type: uint16
+    mode: holding
+    initial_value: 60
+  - address: 1001
+    type: int16
+    mode: holding
+    initial_value: 18
+  - address: 1002
+    type: uint16
+    mode: holding
+    initial_value: 97
+  - address: 1003
+    type: uint16
+    mode: holding
+    initial_value: 2
+  - address: 1004
+    type: int16
+    mode: holding
+    initial_value: 73
+  - address: 1005
+    type: int16
+    mode: holding
+    initial_value: 29
+  - address: 1006
+    type: int16
+    mode: holding
+    initial_value: 90
+  - address: 1007
+    type: int16
+    mode: holding
+    initial_value: 36
+  - address: 1008
+    type: int16
+    mode: holding
+    initial_value: 58
+  - address: 1009
+    type: int16
+    mode: holding
+    initial_value: 21
+  - address: 1010
+    type: uint16
+    mode: holding
+    initial_value: 80
+  - address: 1012
+    type: int16
+    mode: holding
+    initial_value: 34
+  - address: 1013
+    type: int16
+    mode: holding
+    initial_value: 61
+  - address: 1015
+    type: int16
+    mode: holding
+    initial_value: 49
+  - address: 1016
+    type: int16
+    mode: holding
+    initial_value: 26
+  - address: 1017
+    type: int16
+    mode: holding
+    initial_value: 70
+  - address: 1018
+    type: int16
+    mode: holding
+    initial_value: 15
+  - address: 1019
+    type: int16
+    mode: holding
+    initial_value: 93
+  - address: 1020
+    type: int32
+    mode: holding
+    initial_value: 59
+  - address: 1022
+    type: int32
+    mode: holding
+    initial_value: 8
+  - address: 2000
+    type: int16
+    mode: holding
+    initial_value: 50
+  - address: 2001
+    type: uint16
+    mode: holding
+    initial_value: 31
+  - address: 2003
+    type: int16
+    mode: holding
+    initial_value: 22
+  - address: 3000
+    type: int16
+    mode: holding
+    initial_value: 11
+  - address: 3001
+    type: uint16
+    mode: holding
+    initial_value: 95
+  - address: 3002
+    type: int16
+    mode: holding
+    initial_value: 38
+  - address: 3003
+    type: int16
+    mode: holding
+    initial_value: 84
+  - address: 3004
+    type: int16
+    mode: holding
+    initial_value: 3
+  - address: 3005
+    type: uint16
+    mode: holding
+    initial_value: 66
+  - address: 3006
+    type: int16
+    mode: holding
+    initial_value: 55
+  - address: 3007
+    type: int16
+    mode: holding
+    initial_value: 17
+  - address: 3008
+    type: int16
+    mode: holding
+    initial_value: 79
+  - address: 3009
+    type: int16
+    mode: holding
+    initial_value: 40
+  - address: 3050
+    type: int16
+    mode: holding
+    initial_value: 25
+  - address: 4000
+    type: int16
+    mode: holding
+    initial_value: 62
+  - address: 4001
+    type: uint16
+    mode: holding
+    initial_value: 14
+  - address: 4002
+    type: int16
+    mode: holding
+    initial_value: 87
+  - address: 4003
+    type: int16
+    mode: holding
+    initial_value: 28
+  - address: 4004
+    type: int16
+    mode: holding
+    initial_value: 71
+  - address: 4050
+    type: int16
+    mode: holding
+    initial_value: 46
+  - address: 4051
+    type: int16
+    mode: holding
+    initial_value: 9
+  - address: 5000
+    type: int16
+    mode: holding
+    initial_value: 83
+  - address: 5001
+    type: uint16
+    mode: holding
+    initial_value: 19
+  - address: 5002
+    type: int16
+    mode: holding
+    initial_value: 67
+  - address: 5003
+    type: int16
+    mode: holding
+    initial_value: 30
+  - address: 5005
+    type: int16
+    mode: holding
+    initial_value: 23
+  - address: 5006
+    type: int16
+    mode: holding
+    initial_value: 78
+  - address: 5050
+    type: int16
+    mode: holding
+    initial_value: 4
+  - address: 5051
+    type: int16
+    mode: holding
+    initial_value: 88
+  - address: 5052
+    type: int16
+    mode: holding
+    initial_value: 35
+  - address: 5100
+    type: int16
+    mode: holding
+    initial_value: 57
+  - address: 5101
+    type: uint16
+    mode: holding
+    initial_value: 20
+  - address: 5102
+    type: int16
+    mode: holding
+    initial_value: 74
+  - address: 5103
+    type: int16
+    mode: holding
+    initial_value: 6
+  - address: 5104
+    type: int16
+    mode: holding
+    initial_value: 91
+  - address: 5105
+    type: int16
+    mode: holding
+    initial_value: 16
+  - address: 5106
+    type: int16
+    mode: holding
+    initial_value: 43
+  - address: 5150
+    type: int16
+    mode: holding
+    initial_value: 27
+  - address: 5151
+    type: int16
+    mode: holding
+    initial_value: 75
+  - address: 5152
+    type: int16
+    mode: holding
+    initial_value: 10
+  - address: 251
+    type: uint32
+    mode: holding
+    initial_value: 94
+  - address: 252
+    type: uint16
+    mode: holding
+    initial_value: 63

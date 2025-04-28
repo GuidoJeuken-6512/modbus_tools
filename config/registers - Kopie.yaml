@@ -1,0 +1,17 @@
+registers:
+  - address: 0
+    type: int16
+    mode: holding
+    initial_value: 100
+  - address: 1
+    type: int32
+    mode: holding
+    initial_value: 2000
+  - address: 2
+    type: int16
+    mode: coil
+    initial_value: 1
+  - address: 3
+    type: int32
+    mode: coil
+    initial_value: 0
