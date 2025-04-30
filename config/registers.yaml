@@ -1,313 +1,166 @@
 registers:
-  - address: 2002
-    type: int16
-    mode: holding
-    initial_value: 37
-  - address: 2050
-    type: int16
-    mode: holding
-    initial_value: 92
-  - address: 5004
-    type: int16
-    mode: holding
-    initial_value: 13
-  - address: 1011
-    type: int16
-    mode: holding
-    initial_value: 65
+  # Main/Ambient Sensors (0-100)
   - address: 0
     type: int16
     mode: holding
-    initial_value: 44
+    initial_value: 0  # ambient_error_number
   - address: 1
     type: uint16
     mode: holding
-    initial_value: 81
+    initial_value: 1  # ambient_operating_state
   - address: 2
     type: int16
     mode: holding
-    initial_value: 7
+    initial_value: 200  # ambient_temperature (20.0°C)
   - address: 3
     type: int16
     mode: holding
-    initial_value: 56
+    initial_value: 180  # ambient_temperature_1h (18.0°C)
   - address: 4
     type: int16
     mode: holding
-    initial_value: 99
-  - address: 100
+    initial_value: 190  # ambient_temperature_calculated (19.0°C)
+  - address: 10
     type: int16
     mode: holding
-    initial_value: 24
-  - address: 101
-    type: uint16
-    mode: holding
-    initial_value: 68
+    initial_value: 5  # dummy
+
+  # E-Manager Sensors (100-150)
   - address: 102
     type: int16
     mode: holding
-    initial_value: 53
+    initial_value: 2500  # emgr_actual_power (2500W)
   - address: 103
     type: int16
     mode: holding
-    initial_value: 12
+    initial_value: 2000  # emgr_actual_power_consumption (2000W)
   - address: 104
     type: int16
     mode: holding
-    initial_value: 77
-  - address: 1020
-    type: uint32
-    mode: holding
-    initial_value: 41
-  - address: 1022
-    type: uint32
-    mode: holding
-    initial_value: 85
+    initial_value: 3000  # emgr_power_consumption_setpoint (3000W)
+
+  # Heat Pump 1 Sensors (1000-1050)
   - address: 1000
     type: uint16
     mode: holding
-    initial_value: 60
+    initial_value: 0  # error_state
   - address: 1001
     type: int16
     mode: holding
-    initial_value: 18
+    initial_value: 0  # error_number
   - address: 1002
     type: uint16
     mode: holding
-    initial_value: 97
+    initial_value: 3  # state (Ready)
   - address: 1003
     type: uint16
     mode: holding
-    initial_value: 2
+    initial_value: 1  # operating_state (Heizung)
   - address: 1004
     type: int16
     mode: holding
-    initial_value: 73
-  - address: 1005
-    type: int16
-    mode: holding
-    initial_value: 29
-  - address: 1006
-    type: int16
-    mode: holding
-    initial_value: 90
-  - address: 1007
-    type: int16
-    mode: holding
-    initial_value: 36
-  - address: 1008
-    type: int16
-    mode: holding
-    initial_value: 58
-  - address: 1009
-    type: int16
-    mode: holding
-    initial_value: 21
-  - address: 1010
-    type: uint16
-    mode: holding
-    initial_value: 80
-  - address: 1012
-    type: int16
-    mode: holding
-    initial_value: 34
-  - address: 1013
-    type: int16
-    mode: holding
-    initial_value: 61
-  - address: 1015
-    type: int16
-    mode: holding
-    initial_value: 49
-  - address: 1016
-    type: int16
-    mode: holding
-    initial_value: 26
-  - address: 1017
-    type: int16
-    mode: holding
-    initial_value: 70
-  - address: 1018
-    type: int16
-    mode: holding
-    initial_value: 15
-  - address: 1019
-    type: int16
-    mode: holding
-    initial_value: 93
+    initial_value: 3500  # flow_line_temperature (35.00°C)
   - address: 1020
-    type: int32
+    type: uint32
     mode: holding
-    initial_value: 59
+    initial_value: 1000000  # compressor_power_consumption_accumulated (1000kWh)
   - address: 1022
-    type: int32
+    type: uint32
     mode: holding
-    initial_value: 8
+    initial_value: 3000000  # compressor_thermal_energy_output_accumulated (3000kWh)
+
+  # Boiler 1 Sensors (2000-2050)
   - address: 2000
     type: int16
     mode: holding
-    initial_value: 50
+    initial_value: 0  # error_number
   - address: 2001
     type: uint16
     mode: holding
-    initial_value: 31
-  - address: 2003
+    initial_value: 1  # operating_state (Domestic Hot Water)
+  - address: 2002
     type: int16
     mode: holding
-    initial_value: 22
+    initial_value: 450  # actual_high_temperature (45.0°C)
+  - address: 2050
+    type: int16
+    mode: holding
+    initial_value: 550  # target_high_temperature (55.0°C)
+
+  # Buffer 1 Sensors (3000-3050)
   - address: 3000
     type: int16
     mode: holding
-    initial_value: 11
+    initial_value: 0  # error_number
   - address: 3001
     type: uint16
     mode: holding
-    initial_value: 95
+    initial_value: 1  # operating_state (Heating)
   - address: 3002
     type: int16
     mode: holding
-    initial_value: 38
-  - address: 3003
-    type: int16
-    mode: holding
-    initial_value: 84
-  - address: 3004
-    type: int16
-    mode: holding
-    initial_value: 3
-  - address: 3005
-    type: uint16
-    mode: holding
-    initial_value: 66
-  - address: 3006
-    type: int16
-    mode: holding
-    initial_value: 55
-  - address: 3007
-    type: int16
-    mode: holding
-    initial_value: 17
-  - address: 3008
-    type: int16
-    mode: holding
-    initial_value: 79
-  - address: 3009
-    type: int16
-    mode: holding
-    initial_value: 40
+    initial_value: 400  # actual_high_temp (40.0°C)
   - address: 3050
     type: int16
     mode: holding
-    initial_value: 25
+    initial_value: 450  # maximum_buffer_temp (45.0°C)
+
+  # Solar 1 Sensors (4000-4050)
   - address: 4000
     type: int16
     mode: holding
-    initial_value: 62
+    initial_value: 0  # error_number
   - address: 4001
     type: uint16
     mode: holding
-    initial_value: 14
+    initial_value: 1  # operating_state (Active)
   - address: 4002
     type: int16
     mode: holding
-    initial_value: 87
+    initial_value: 650  # collector_temperature (65.0°C)
   - address: 4003
     type: int16
     mode: holding
-    initial_value: 28
+    initial_value: 450  # storage_temperature (45.0°C)
   - address: 4004
     type: int16
     mode: holding
-    initial_value: 71
-  - address: 4050
-    type: int16
+    initial_value: 50  # power_current (5.0 kW)
+  - address: 4005
+    type: int32
     mode: holding
-    initial_value: 46
-  - address: 4051
-    type: int16
-    mode: holding
-    initial_value: 9
+    initial_value: 10000  # energy_total (10000 kWh)
+
+  # Heating Circuit 1 Sensors (5000-5050)
   - address: 5000
     type: int16
     mode: holding
-    initial_value: 83
+    initial_value: 0  # error_number
   - address: 5001
     type: uint16
     mode: holding
-    initial_value: 19
+    initial_value: 0  # operating_state (Heating)
   - address: 5002
     type: int16
     mode: holding
-    initial_value: 67
+    initial_value: 350  # flow_line_temperature (35.0°C)
   - address: 5003
     type: int16
     mode: holding
-    initial_value: 30
-  - address: 5005
+    initial_value: 300  # return_line_temperature (30.0°C)
+  - address: 5004
     type: int16
     mode: holding
-    initial_value: 23
-  - address: 5006
-    type: int16
-    mode: holding
-    initial_value: 78
+    initial_value: 220  # room_device_temperature (22.0°C)
   - address: 5050
     type: int16
     mode: holding
-    initial_value: 4
+    initial_value: 50  # set_flow_line_offset_temperature (5.0°C)
   - address: 5051
     type: int16
     mode: holding
-    initial_value: 88
+    initial_value: 210  # target_room_temperature (21.0°C)
   - address: 5052
     type: int16
     mode: holding
-    initial_value: 35
-  - address: 5100
-    type: int16
-    mode: holding
-    initial_value: 57
-  - address: 5101
-    type: uint16
-    mode: holding
-    initial_value: 20
-  - address: 5102
-    type: int16
-    mode: holding
-    initial_value: 74
-  - address: 5103
-    type: int16
-    mode: holding
-    initial_value: 6
-  - address: 5104
-    type: int16
-    mode: holding
-    initial_value: 91
-  - address: 5105
-    type: int16
-    mode: holding
-    initial_value: 16
-  - address: 5106
-    type: int16
-    mode: holding
-    initial_value: 43
-  - address: 5150
-    type: int16
-    mode: holding
-    initial_value: 27
-  - address: 5151
-    type: int16
-    mode: holding
-    initial_value: 75
-  - address: 5152
-    type: int16
-    mode: holding
-    initial_value: 10
-  - address: 251
-    type: uint32
-    mode: holding
-    initial_value: 94
-  - address: 252
-    type: uint16
-    mode: holding
-    initial_value: 63
+    initial_value: 240  # cooling_mode_room_temperature (24.0°C)
