@@ -66,3 +66,11 @@ The server uses the Python module `PyYAML` to read the register configuration. T
 Diese Modbus Tools wurden speziell für die Entwicklung und das Testen der [Lambda Home Assistant Integration](https://github.com/GuidoJeuken-6512/lambda) erstellt. Sie ermöglichen das einfache Simulieren und Abfragen von Modbus-Registerwerten, wie sie von der Integration benötigt werden.
 
 These Modbus tools were specifically developed for the [Lambda Home Assistant integration](https://github.com/GuidoJeuken-6512/lambda). They allow easy simulation and querying of Modbus register values as required by the integration.
+
+---
+
+**Haftungsausschluss/Disclaimer:**
+
+Die Nutzung dieser Software erfolgt auf eigene Gefahr. Es wird keine Haftung für Schäden, Datenverluste oder sonstige Folgen übernommen, die durch die Verwendung der Software entstehen. Jeglicher Regressanspruch ist ausgeschlossen.
+
+Use of this software is at your own risk. No liability is accepted for any damages, data loss, or other consequences resulting from the use of this software. Any claims for compensation are excluded.
