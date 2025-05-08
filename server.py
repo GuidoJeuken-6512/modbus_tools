@@ -30,8 +30,8 @@ class LoggingSlaveContext(ModbusSlaveContext):
             else:
                 formatted_values.append(str(val))
         
-        logger.info(f"Read Request - Function: {function_name}, Address: {address}, Count: {count}")
-        logger.info(f"Read Response - Values: {formatted_values}")
+        #logger.info(f"Read Request - Function: {function_name}, Address: {address}, Count: {count}")
+        #logger.info(f"Read Response - Values: {formatted_values}")
         return values
 
     def setValues(self, fx, address, values):
@@ -178,7 +178,7 @@ def main():
     try:
         StartTcpServer(
             context=context,
-            address=("0.0.0.0", 502)  # Ensure port is an integer
+            address=("0.0.0.0", 5020)  # Ensure port is an integer
         )
     except Exception as e:
         logger.error(f"Failed to start server: {e}")
