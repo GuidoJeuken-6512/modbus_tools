@@ -23,6 +23,32 @@ Dieses Projekt enthält drei Hauptkomponenten:
 - Dient zu Test- und Entwicklungszwecken
 - Registerwerte können über Konfigurationsdateien (`config/register.yaml`) angepasst werden
 
+#### Server Logging-Konfiguration
+Der Server bietet flexible Logging-Optionen, die über Konstanten am Anfang der `server.py` gesteuert werden können:
+
+```python
+# Logging-Konfigurationskonstanten
+LOG_ERRORS = True        # Steuert das Logging von Fehlermeldungen
+LOG_WRITE_REGISTERS = True  # Steuert das Logging von Schreiboperationen
+LOG_READ_REGISTERS = False  # Steuert das Logging von Leseoperationen
+```
+
+Verfügbare Logging-Optionen:
+1. **Fehler-Logging** (`LOG_ERRORS`)
+   - Bei `True`: Loggt alle Fehlermeldungen, einschließlich Schreibverifizierungsfehler
+   - Bei `False`: Unterdrückt Fehlermeldungen
+   - Standard: `True`
+
+2. **Register-Schreib-Logging** (`LOG_WRITE_REGISTERS`)
+   - Bei `True`: Loggt alle Schreiboperationen auf Register
+   - Bei `False`: Unterdrückt Schreiboperationen-Logs
+   - Standard: `True`
+
+3. **Register-Lese-Logging** (`LOG_READ_REGISTERS`)
+   - Bei `True`: Loggt alle Leseoperationen von Registern
+   - Bei `False`: Unterdrückt Leseoperationen-Logs
+   - Standard: `False`
+
 ## Usage (English)
 
 This project contains three main components:
@@ -45,6 +71,32 @@ This project contains three main components:
 - Implements a simple Modbus TCP server
 - Intended for testing and development
 - Register values can be customized via configuration files (`config/register.yaml`)
+
+#### Server Logging Configuration
+The server provides flexible logging options that can be configured through constants at the beginning of `server.py`:
+
+```python
+# Logging configuration constants
+LOG_ERRORS = True        # Controls logging of error messages
+LOG_WRITE_REGISTERS = True  # Controls logging of write operations
+LOG_READ_REGISTERS = False  # Controls logging of read operations
+```
+
+Available logging options:
+1. **Error Logging** (`LOG_ERRORS`)
+   - When `True`: Logs all error messages, including write verification failures
+   - When `False`: Suppresses error messages
+   - Default: `True`
+
+2. **Write Register Logging** (`LOG_WRITE_REGISTERS`)
+   - When `True`: Logs all write operations to registers
+   - When `False`: Suppresses write operation logs
+   - Default: `True`
+
+3. **Read Register Logging** (`LOG_READ_REGISTERS`)
+   - When `True`: Logs all read operations from registers
+   - When `False`: Suppresses read operation logs
+   - Default: `False`
 
 ---
 

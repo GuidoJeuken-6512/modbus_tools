@@ -87,6 +87,24 @@ registers:
     mode: holding
     initial_value: 550  # target_high_temperature (55.0°C)
 
+  # Boiler 1 Sensors (2100-2150)
+  - address: 2100
+    type: int16
+    mode: holding
+    initial_value: 0  # error_number
+  - address: 2101
+    type: uint16
+    mode: holding
+    initial_value: 1  # operating_state (Domestic Hot Water)
+  - address: 2102
+    type: int16
+    mode: holding
+    initial_value: 450  # actual_high_temperature (45.0°C)
+  - address: 2150
+    type: int16
+    mode: holding
+    initial_value: 550  # target_high_temperature (55.0°C)
+
   # Buffer 1 Sensors (3000-3050)
   - address: 3000
     type: int16
@@ -161,6 +179,41 @@ registers:
     mode: holding
     initial_value: 210  # target_room_temperature (21.0°C)
   - address: 5052
+    type: int16
+    mode: holding
+    initial_value: 240  # cooling_mode_room_temperature (24.0°C)
+
+
+    # Heating Circuit 2 Sensors (5100-5150)
+  - address: 5100
+    type: int16
+    mode: holding
+    initial_value: 0  # error_number
+  - address: 5101
+    type: uint16
+    mode: holding
+    initial_value: 0  # operating_state (Heating)
+  - address: 5102
+    type: int16
+    mode: holding
+    initial_value: 350  # flow_line_temperature (35.0°C)
+  - address: 5103
+    type: int16
+    mode: holding
+    initial_value: 300  # return_line_temperature (30.0°C)
+  - address: 5104
+    type: int16
+    mode: holding
+    initial_value: 220  # room_device_temperature (22.0°C)
+  - address: 5150
+    type: int16
+    mode: holding
+    initial_value: 50  # set_flow_line_offset_temperature (5.0°C)
+  - address: 5151
+    type: int16
+    mode: holding
+    initial_value: 210  # target_room_temperature (21.0°C)
+  - address: 5152
     type: int16
     mode: holding
     initial_value: 240  # cooling_mode_room_temperature (24.0°C)

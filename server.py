@@ -4,6 +4,11 @@ import yaml
 import os
 import logging
 
+# Logging configuration constants
+LOG_ERRORS = True
+LOG_WRITE_REGISTERS = True
+LOG_READ_REGISTERS = False
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -15,49 +20,51 @@ logger = logging.getLogger(__name__)
 class LoggingSlaveContext(ModbusSlaveContext):
     def getValues(self, fx, address, count=1):
         values = super().getValues(fx, address, count)
-        function_name = {
-            1: "read_coils",
-            2: "read_discrete_inputs",
-            3: "read_holding_registers",
-            4: "read_input_registers"
-        }.get(fx, f"unknown_function_{fx}")
-        
-        # Format values for better readability
-        formatted_values = []
-        for val in values:
-            if isinstance(val, (int, float)):
-                formatted_values.append(f"0x{val:04x} ({val})")
-            else:
-                formatted_values.append(str(val))
-        
-        #logger.info(f"Read Request - Function: {function_name}, Address: {address}, Count: {count}")
-        #logger.info(f"Read Response - Values: {formatted_values}")
+        if LOG_READ_REGISTERS:
+            function_name = {
+                1: "read_coils",
+                2: "read_discrete_inputs",
+                3: "read_holding_registers",
+                4: "read_input_registers"
+            }.get(fx, f"unknown_function_{fx}")
+            
+            # Format values for better readability
+            formatted_values = []
+            for val in values:
+                if isinstance(val, (int, float)):
+                    formatted_values.append(f"0x{val:04x} ({val})")
+                else:
+                    formatted_values.append(str(val))
+            
+            logger.info(f"Read Request - Function: {function_name}, Address: {address}, Count: {count}")
+            logger.info(f"Read Response - Values: {formatted_values}")
         return values
 
     def setValues(self, fx, address, values):
-        function_name = {
-            5: "write_single_coil",
-            6: "write_single_register",
-            15: "write_multiple_coils",
-            16: "write_multiple_registers"
-        }.get(fx, f"unknown_function_{fx}")
-        
-        # Format values for better readability
-        formatted_values = []
-        for val in values:
-            if isinstance(val, (int, float)):
-                formatted_values.append(f"0x{val:04x} ({val})")
-            else:
-                formatted_values.append(str(val))
-        
-        logger.info(f"Write Request - Function: {function_name}, Address: {address}")
-        logger.info(f"Write Values: {formatted_values}")
+        if LOG_WRITE_REGISTERS:
+            function_name = {
+                5: "write_single_coil",
+                6: "write_single_register",
+                15: "write_multiple_coils",
+                16: "write_multiple_registers"
+            }.get(fx, f"unknown_function_{fx}")
+            
+            # Format values for better readability
+            formatted_values = []
+            for val in values:
+                if isinstance(val, (int, float)):
+                    formatted_values.append(f"0x{val:04x} ({val})")
+                else:
+                    formatted_values.append(str(val))
+            
+            logger.info(f"Write Request - Function: {function_name}, Address: {address}")
+            logger.info(f"Write Values: {formatted_values}")
         
         # Verify the write operation
         super().setValues(fx, address, values)
         # Read back the values to verify
         written_values = super().getValues(fx, address, len(values))
-        if written_values != values:
+        if written_values != values and LOG_ERRORS:
             logger.error(f"Write verification failed at address {address}!")
             logger.error(f"Attempted to write: {values}")
             logger.error(f"Actually written: {written_values}")
