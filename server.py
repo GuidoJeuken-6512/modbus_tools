@@ -4,6 +4,9 @@ import yaml
 import os
 import logging
 
+# Server configuration constants
+MODBUS_SERVER_PORT = 502  # Standard Modbus TCP port is 502, but we use 5020 for testing
+
 # Logging configuration constants
 LOG_ERRORS = True
 LOG_WRITE_REGISTERS = True
@@ -181,11 +184,11 @@ def main():
     print_registers(registers)
     
     context = setup_modbus_server(registers)
-    logger.info("Modbus TCP Server running on port 502...")
+    logger.info(f"Modbus TCP Server running on port {MODBUS_SERVER_PORT}...")
     try:
         StartTcpServer(
             context=context,
-            address=("0.0.0.0", 5020)  # Ensure port is an integer
+            address=("0.0.0.0", MODBUS_SERVER_PORT)
         )
     except Exception as e:
         logger.error(f"Failed to start server: {e}")

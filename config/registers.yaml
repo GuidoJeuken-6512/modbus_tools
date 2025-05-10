@@ -69,6 +69,36 @@ registers:
     mode: holding
     initial_value: 3000000  # compressor_thermal_energy_output_accumulated (3000kWh)
 
+  # Heat Pump 2 Sensors (1000-1050)
+  - address: 1100
+    type: uint16
+    mode: holding
+    initial_value: 0  # error_state
+  - address: 1101
+    type: int16
+    mode: holding
+    initial_value: 0  # error_number
+  - address: 1102
+    type: uint16
+    mode: holding
+    initial_value: 3  # state (Ready)
+  - address: 1103
+    type: uint16
+    mode: holding
+    initial_value: 1  # operating_state (Heizung)
+  - address: 1104
+    type: int16
+    mode: holding
+    initial_value: 3500  # flow_line_temperature (35.00°C)
+  - address: 1120
+    type: uint32
+    mode: holding
+    initial_value: 10000  # compressor_power_consumption_accumulated (10kWh)
+  - address: 1122
+    type: uint32
+    mode: holding
+    initial_value: 30000  # compressor_thermal_energy_output_accumulated (30kWh)    
+
   # Boiler 1 Sensors (2000-2050)
   - address: 2000
     type: int16
@@ -87,7 +117,7 @@ registers:
     mode: holding
     initial_value: 550  # target_high_temperature (55.0°C)
 
-  # Boiler 1 Sensors (2100-2150)
+  # Boiler 2 Sensors (2100-2150)
   - address: 2100
     type: int16
     mode: holding
@@ -122,6 +152,24 @@ registers:
     type: int16
     mode: holding
     initial_value: 450  # maximum_buffer_temp (45.0°C)
+
+  # Buffer 2 Sensors (3000-3050)
+  - address: 3100
+    type: int16
+    mode: holding
+    initial_value: 0  # error_number
+  - address: 3101
+    type: uint16
+    mode: holding
+    initial_value: 1  # operating_state (Heating)
+  - address: 3102
+    type: int16
+    mode: holding
+    initial_value: 400  # actual_high_temp (40.0°C)
+  - address: 3150
+    type: int16
+    mode: holding
+    initial_value: 450  # maximum_buffer_temp (45.0°C)    
 
   # Solar 1 Sensors (4000-4050)
   - address: 4000
