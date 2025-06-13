@@ -5,12 +5,12 @@ import os
 import logging
 
 # Server configuration constants
-MODBUS_SERVER_PORT = 502  # Standard Modbus TCP port is 502, but we use 5020 for testing
+MODBUS_SERVER_PORT = 5020  # Standard Modbus TCP port is 502, but we use 5020 for testing
 
 # Logging configuration constants
 LOG_ERRORS = True
 LOG_WRITE_REGISTERS = True
-LOG_READ_REGISTERS = False
+LOG_READ_REGISTERS = True
 
 # Configure logging
 logging.basicConfig(
