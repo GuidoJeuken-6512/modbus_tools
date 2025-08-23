@@ -1,6 +1,6 @@
 from pymodbus.server import StartTcpServer
 from pymodbus.datastore import ModbusServerContext
-from pymodbus.datastore.store import ModbusSlaveContext, ModbusSequentialDataBlock
+from pymodbus.datastore import ModbusSlaveContext, ModbusSequentialDataBlock
 import yaml
 import os
 import logging
@@ -23,8 +23,7 @@ logger = logging.getLogger(__name__)
 
 class LoggingSlaveContext(ModbusSlaveContext):
     def getValues(self, fx, address, count=1):
-        # pymodbus 3.x: getValues -> get_values
-        values = super().get_values(fx, address, count)
+        values = super().getValues(fx, address, count)
         if LOG_READ_REGISTERS:
             function_name = {
                 1: "read_coils",
@@ -32,7 +31,6 @@ class LoggingSlaveContext(ModbusSlaveContext):
                 3: "read_holding_registers",
                 4: "read_input_registers"
             }.get(fx, f"unknown_function_{fx}")
-            
             # Format values for better readability
             formatted_values = []
             for val in values:
@@ -40,7 +38,6 @@ class LoggingSlaveContext(ModbusSlaveContext):
                     formatted_values.append(f"0x{val:04x} ({val})")
                 else:
                     formatted_values.append(str(val))
-            
             logger.info(f"Read Request - Function: {function_name}, Address: {address}, Count: {count}")
             logger.info(f"Read Response - Values: {formatted_values}")
         return values
@@ -67,9 +64,9 @@ class LoggingSlaveContext(ModbusSlaveContext):
             logger.info(f"Write Values: {formatted_values}")
         
         # Verify the write operation
-        super().set_values(fx, address, values)
+        super().setValues(fx, address, values)
         # Read back the values to verify
-        written_values = super().get_values(fx, address, len(values))
+        written_values = super().getValues(fx, address, len(values))
         if written_values != values and LOG_ERRORS:
             logger.error(f"Write verification failed at address {address}!")
             logger.error(f"Attempted to write: {values}")
@@ -143,9 +140,9 @@ def setup_modbus_server(registers):
         try:
             if mode == 'holding':
                 # Use the correct function code (3) and address
-                store.set_values(3, addr, values)
+                store.setValues(3, addr, values)
                 # Verify the write
-                written = store.get_values(3, addr, len(values))
+                written = store.getValues(3, addr, len(values))
                 if written != values:
                     logger.error(f"Verification failed for register {addr}!")
                     logger.error(f"Expected: {values}, Got: {written}")
@@ -153,9 +150,9 @@ def setup_modbus_server(registers):
                     surrounding = store.getValues(3, max(0, addr-1), min(3, hr_size-addr))
                     logger.error(f"Surrounding registers ({max(0, addr-1)}-{min(addr+1, hr_size-1)}): {surrounding}")
             elif mode == 'input':
-                store.set_values(4, addr, values)  # 4 = input registers
+                store.setValues(4, addr, values)  # 4 = input registers
             elif mode == 'coil':
-                store.set_values(1, addr, values)  # 1 = coils
+                store.setValues(1, addr, values)  # 1 = coils
         except Exception as e:
             logger.error(f"Failed to set register {addr}: {e}")
             logger.error(f"Block size - HR: {hr_size}, IR: {ir_size}, CO: {co_size}")
@@ -166,7 +163,7 @@ def setup_modbus_server(registers):
         addr = reg['address']
         if reg['mode'] == 'holding':
             size = 2 if reg['type'] in ['int32', 'uint32'] else 1
-            values = store.get_values(3, addr, size)
+            values = store.getValues(3, addr, size)
             logger.info(f"Register {addr}: {[f'0x{v:04x} ({v})' for v in values]}")
     
     context = ModbusServerContext(slaves=store, single=True)
