@@ -302,33 +302,37 @@ class ModbusScanner:
                         address=register, count=1)
 
                 if hasattr(response, 'registers') and response.registers:
-                    # Check if this register is known to be 32-bit from registers.yaml
-                    # Known 32-bit registers: 1020, 1022, 1120, 1122, 4005
-                    known_32bit_registers = {1020, 1022, 1120, 1122, 4005}
-                    
-                    if register in known_32bit_registers:
-                        # This is a known 32-bit register, read 2 registers
-                        try:
-                            if reg_type == "Holding Registers":
-                                response_32 = client.read_holding_registers(
-                                    address=register, count=2)
-                            else:
-                                response_32 = client.read_input_registers(
-                                    address=register, count=2)
-                                
-                            if (hasattr(response_32, 'registers') and
-                                len(response_32.registers) == 2):
+                    # Try to read 2 registers to check if this might be a 32-bit register
+                    # Only do this if the single register read was successful
+                    try:
+                        if reg_type == "Holding Registers":
+                            response_32 = client.read_holding_registers(
+                                address=register, count=2)
+                        else:
+                            response_32 = client.read_input_registers(
+                                address=register, count=2)
+                            
+                        if (hasattr(response_32, 'registers') and
+                            len(response_32.registers) == 2):
+                            # Check if the second register also has a meaningful value
+                            # or if the first register has a very large value (indicating 32-bit)
+                            first_reg = response_32.registers[0]
+                            second_reg = response_32.registers[1]
+                            
+                            # Heuristic: if first register > 32767 or second register > 0,
+                            # it's likely a 32-bit register
+                            if (first_reg > 32767 or second_reg > 0 or
+                                first_reg == 0 and second_reg > 0):
                                 # Combine two 16-bit values to 32-bit (big-endian)
-                                value_32 = ((response_32.registers[0] << 16) |
-                                            response_32.registers[1])
+                                value_32 = ((first_reg << 16) | second_reg)
                                 return {
                                     'value': value_32,
                                     'is_32bit': True,
                                     'raw_registers': response_32.registers
                                 }
-                        except Exception:
-                            # If 2-register read fails, fall back to single register
-                            pass
+                    except Exception:
+                        # If 2-register read fails, fall back to single register
+                        pass
                     
                     # Return as 16-bit register (either unknown or fallback)
                     return {
