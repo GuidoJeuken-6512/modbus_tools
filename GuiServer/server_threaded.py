@@ -4,7 +4,9 @@ import queue
 from datetime import datetime
 from pymodbus.server import StartTcpServer
 from pymodbus.datastore import ModbusServerContext
-from pymodbus.datastore import ModbusSlaveContext, ModbusSequentialDataBlock
+from pymodbus.datastore import ModbusDeviceContext, ModbusSequentialDataBlock
+from pymodbus.exceptions import ModbusException
+from pymodbus.pdu import ExceptionResponse
 
 import yaml
 import os
@@ -12,7 +14,7 @@ import os
 MODBUS_SERVER_PORT = 5020
 
 
-class LoggingSlaveContext(ModbusSlaveContext):
+class LoggingSlaveContext(ModbusDeviceContext):
     """Modbus Slave Context mit Queue-basiertem Logging."""
     
     def __init__(self, log_queue=None, valid_addresses=None, *args, **kwargs):
@@ -39,6 +41,26 @@ class LoggingSlaveContext(ModbusSlaveContext):
     
     def getValues(self, fx, address, count=1):
         """Lesen mit Logging."""
+        # Different validation for single vs batch reads
+        if count == 1:
+            # Single register read - strict validation
+            if address not in self.valid_addresses:
+                exception_code = 2  # Illegal Data Address
+                self.log_message("ERROR", address, count, f"Invalid single register address - Exception Code {exception_code}", f"read_function_{fx}")
+                return ExceptionResponse(fx, exception_code)
+        else:
+            # Batch read - less strict validation
+            # Only validate if address is completely outside the valid range
+            min_valid_addr = min(self.valid_addresses) if self.valid_addresses else 0
+            max_valid_addr = max(self.valid_addresses) if self.valid_addresses else 0
+            
+            # Allow reading beyond valid addresses - just return zeros for undefined registers
+            # Only throw exception for addresses that are completely out of range
+            if address < min_valid_addr or address > max_valid_addr + 1000:  # Allow some buffer
+                exception_code = 2  # Illegal Data Address
+                self.log_message("ERROR", address, count, f"Address completely out of range - Exception Code {exception_code}", f"read_function_{fx}")
+                return ExceptionResponse(fx, exception_code)
+
         values = super().getValues(fx, address, count)
         function_name = {
             1: "read_coils",
@@ -46,7 +68,7 @@ class LoggingSlaveContext(ModbusSlaveContext):
             3: "read_holding_registers",
             4: "read_input_registers"
         }.get(fx, f"unknown_function_{fx}")
-        
+
         # Format values
         formatted_values = []
         for val in values:
@@ -54,19 +76,31 @@ class LoggingSlaveContext(ModbusSlaveContext):
                 formatted_values.append(f"0x{val:04x} ({val})")
             else:
                 formatted_values.append(str(val))
-        
+
         self.log_message("READ", address, count, formatted_values, function_name)
         return values
     
     def setValues(self, fx, address, values):
         """Schreiben mit Logging."""
+        # Check if the requested addresses are valid
+        # Only validate if address is completely outside the valid range
+        min_valid_addr = min(self.valid_addresses) if self.valid_addresses else 0
+        max_valid_addr = max(self.valid_addresses) if self.valid_addresses else 0
+        
+        # Allow writing beyond valid addresses - just ignore undefined registers
+        # Only throw exception for addresses that are completely out of range
+        if address < min_valid_addr or address > max_valid_addr + 1000:  # Allow some buffer
+            exception_code = 2  # Illegal Data Address
+            self.log_message("ERROR", address, len(values), f"Address completely out of range - Exception Code {exception_code}", f"write_function_{fx}")
+            return ExceptionResponse(fx, exception_code)
+
         function_name = {
             5: "write_single_coil",
             6: "write_single_register",
             15: "write_multiple_coils",
             16: "write_multiple_registers"
         }.get(fx, f"unknown_function_{fx}")
-        
+
         # Format values
         formatted_values = []
         for val in values:
@@ -74,16 +108,16 @@ class LoggingSlaveContext(ModbusSlaveContext):
                 formatted_values.append(f"0x{val:04x} ({val})")
             else:
                 formatted_values.append(str(val))
-        
+
         # Store previous value for comparison
         old_value = self._last_write_values.get(address, None)
-        
-        self.log_message("WRITE", address, len(values), 
+
+        self.log_message("WRITE", address, len(values),
                         formatted_values, function_name)
-        
+
         # Actual write
         super().setValues(fx, address, values)
-        
+
         # Store new value
         if len(values) > 0:
             self._last_write_values[address] = values[0]
@@ -249,5 +283,5 @@ def setup_modbus_server(registers, log_queue=None):
     # Create context with slave id 1 (Lambda expects Unit ID 1)
     # Map slave id 1 to our store
     slaves = {1: store}
-    context = ModbusServerContext(slaves=slaves, single=False)
+    context = ModbusServerContext(slaves, single=False)
     return context

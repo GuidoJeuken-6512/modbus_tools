@@ -1,6 +1,8 @@
 from pymodbus.server import StartTcpServer
 from pymodbus.datastore import ModbusServerContext
-from pymodbus.datastore import ModbusSlaveContext, ModbusSequentialDataBlock
+from pymodbus.datastore import ModbusDeviceContext, ModbusSequentialDataBlock
+from pymodbus.exceptions import ModbusException
+from pymodbus.pdu import ExceptionResponse
 import yaml
 import os
 import logging
@@ -21,8 +23,31 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-class LoggingSlaveContext(ModbusSlaveContext):
+class LoggingSlaveContext(ModbusDeviceContext):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._last_write_values = {}
+        self.valid_addresses = getattr(self, 'valid_addresses', set())
+
     def getValues(self, fx, address, count=1):
+        # Different validation for single vs batch reads
+        if count == 1:
+            # Single register read - strict validation
+            if address not in self.valid_addresses:
+                logger.error(f"Invalid single register address {address} for function {fx} - Exception Code 2")
+                return ExceptionResponse(fx, 2)
+        else:
+            # Batch read - less strict validation
+            # Only validate if address is completely outside the valid range
+            min_valid_addr = min(self.valid_addresses) if self.valid_addresses else 0
+            max_valid_addr = max(self.valid_addresses) if self.valid_addresses else 0
+            
+            # Allow reading beyond valid addresses - just return zeros for undefined registers
+            # Only throw exception for addresses that are completely out of range
+            if address < min_valid_addr or address > max_valid_addr + 1000:  # Allow some buffer
+                logger.error(f"Address {address} completely out of range for function {fx} - Exception Code 2")
+                return ExceptionResponse(fx, 2)
+
         values = super().getValues(fx, address, count)
         if LOG_READ_REGISTERS:
             function_name = {
@@ -43,6 +68,17 @@ class LoggingSlaveContext(ModbusSlaveContext):
         return values
 
     def setValues(self, fx, address, values):
+        # Check if the requested addresses are valid
+        # Only validate if address is completely outside the valid range
+        min_valid_addr = min(self.valid_addresses) if self.valid_addresses else 0
+        max_valid_addr = max(self.valid_addresses) if self.valid_addresses else 0
+        
+        # Allow writing beyond valid addresses - just ignore undefined registers
+        # Only throw exception for addresses that are completely out of range
+        if address < min_valid_addr or address > max_valid_addr + 1000:  # Allow some buffer
+            logger.error(f"Address {address} completely out of range for function {fx} - Exception Code 2")
+            return ExceptionResponse(fx, 2)
+
         # pymodbus 3.x: setValues -> set_values
         if LOG_WRITE_REGISTERS:
             function_name = {
@@ -51,7 +87,7 @@ class LoggingSlaveContext(ModbusSlaveContext):
                 15: "write_multiple_coils",
                 16: "write_multiple_registers"
             }.get(fx, f"unknown_function_{fx}")
-            
+
             # Format values for better readability
             formatted_values = []
             for val in values:
@@ -59,10 +95,10 @@ class LoggingSlaveContext(ModbusSlaveContext):
                     formatted_values.append(f"0x{val:04x} ({val})")
                 else:
                     formatted_values.append(str(val))
-            
+
             logger.info(f"Write Request - Function: {function_name}, Address: {address}")
             logger.info(f"Write Values: {formatted_values}")
-        
+
         # Verify the write operation
         super().setValues(fx, address, values)
         # Read back the values to verify
@@ -121,6 +157,9 @@ def setup_modbus_server(registers):
         di=ModbusSequentialDataBlock(0, [0])  # Add empty discrete inputs block
     )
 
+    # Store valid addresses in the context for validation
+    store.valid_addresses = valid_addresses
+
     # Second pass: initialize values
     for reg in registers:
         addr = reg['address']
@@ -166,7 +205,7 @@ def setup_modbus_server(registers):
             values = store.getValues(3, addr, size)
             logger.info(f"Register {addr}: {[f'0x{v:04x} ({v})' for v in values]}")
     
-    context = ModbusServerContext(slaves=store, single=True)
+    context = ModbusServerContext(store, single=True)
     return context
 
 def print_registers(registers):
