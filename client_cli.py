@@ -48,13 +48,24 @@ def read_register_group(client, name, start_addr, count, scale_factors=None):
     return values
 
 def test_read_registers():
-    client = ModbusTcpClient('localhost', port=502)
+    client = ModbusTcpClient('localhost', port=5020)
     
     try:
         if not client.connect():
             logger.error("Failed to connect to server")
             return
 
+        logger.info("Successfully connected to server on port 5020")
+        
+        # Test: Read register 1000
+        logger.info("\n=== Testing Register 1000 ===")
+        result = client.read_holding_registers(address=1000, count=1)
+        
+        if result.isError():
+            logger.error(f"Error reading register 1000: {result}")
+        else:
+            logger.info(f"Register 1000 value: 0x{result.registers[0]:04x} ({result.registers[0]})")
+        
         # Read Temperature Settings (5050-5051)
         logger.info("\nTesting Temperature Settings")
         temp_values = read_register_group(
@@ -90,6 +101,8 @@ def test_read_registers():
 
     except Exception as e:
         logger.error(f"Error: {e}")
+        import traceback
+        traceback.print_exc()
     finally:
         client.close()
 

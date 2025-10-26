@@ -1,0 +1,7 @@
+{
+  "heat_pump_mode": 2,
+  "registers": {
+    "2001": 1
+  },
+  "last_accumulated_values": {}
+}

@@ -1,0 +1,267 @@
+registers:
+  # Main/Ambient Sensors (0-100)
+  - address: 0
+    type: int16
+    mode: holding
+    initial_value: 0  # ambient_error_number
+  - address: 1
+    type: uint16
+    mode: holding
+    initial_value: 1  # ambient_operating_state
+  - address: 2
+    type: int16
+    mode: holding
+    initial_value: 200  # ambient_temperature (20.0°C)
+  - address: 3
+    type: int16
+    mode: holding
+    initial_value: 180  # ambient_temperature_1h (18.0°C)
+  - address: 4
+    type: int16
+    mode: holding
+    initial_value: 190  # ambient_temperature_calculated (19.0°C)
+  - address: 10
+    type: int16
+    mode: holding
+    initial_value: 5  # dummy
+
+  # E-Manager Sensors (100-150)
+  - address: 102
+    type: int16
+    mode: holding
+    initial_value: 2500  # emgr_actual_power (2500W)
+  - address: 103
+    type: int16
+    mode: holding
+    initial_value: 2000  # emgr_actual_power_consumption (2000W)
+  - address: 104
+    type: int16
+    mode: holding
+    initial_value: 3000  # emgr_power_consumption_setpoint (3000W)
+
+  # Heat Pump 1 Sensors (1000-1050)
+  - address: 1000
+    type: uint16
+    mode: holding
+    initial_value: 0  # error_state
+  - address: 1001
+    type: int16
+    mode: holding
+    initial_value: 0  # error_number
+  - address: 1002
+    type: uint16
+    mode: holding
+    initial_value: 3  # state (Ready)
+  - address: 1003
+    type: uint16
+    mode: holding
+    initial_value: 1  # operating_state (Heizung)
+  - address: 1004
+    type: int16
+    mode: holding
+    initial_value: 3500  # flow_line_temperature (35.00°C)
+  - address: 1020
+    type: uint32
+    mode: holding
+    initial_value: 1000000  # compressor_power_consumption_accumulated (1000kWh)
+  - address: 1022
+    type: uint32
+    mode: holding
+    initial_value: 3000000  # compressor_thermal_energy_output_accumulated (3000kWh)
+
+  # Heat Pump 2 Sensors (1000-1050)
+  - address: 1100
+    type: uint16
+    mode: holding
+    initial_value: 0  # error_state
+  - address: 1101
+    type: int16
+    mode: holding
+    initial_value: 0  # error_number
+  - address: 1102
+    type: uint16
+    mode: holding
+    initial_value: 3  # state (Ready)
+  - address: 1103
+    type: uint16
+    mode: holding
+    initial_value: 1  # operating_state (Heizung)
+  - address: 1104
+    type: int16
+    mode: holding
+    initial_value: 3500  # flow_line_temperature (35.00°C)
+  - address: 1120
+    type: uint32
+    mode: holding
+    initial_value: 10000  # compressor_power_consumption_accumulated (10kWh)
+  - address: 1122
+    type: uint32
+    mode: holding
+    initial_value: 30000  # compressor_thermal_energy_output_accumulated (30kWh)    
+
+  # Boiler 1 Sensors (2000-2050)
+  - address: 2000
+    type: int16
+    mode: holding
+    initial_value: 0  # error_number
+  - address: 2001
+    type: uint16
+    mode: holding
+    initial_value: 1  # operating_state (Domestic Hot Water)
+  - address: 2002
+    type: int16
+    mode: holding
+    initial_value: 450  # actual_high_temperature (45.0°C)
+  - address: 2050
+    type: int16
+    mode: holding
+    initial_value: 550  # target_high_temperature (55.0°C)
+
+  # Boiler 2 Sensors (2100-2150)
+  - address: 2100
+    type: int16
+    mode: holding
+    initial_value: 0  # error_number
+  - address: 2101
+    type: uint16
+    mode: holding
+    initial_value: 1  # operating_state (Domestic Hot Water)
+  - address: 2102
+    type: int16
+    mode: holding
+    initial_value: 450  # actual_high_temperature (45.0°C)
+  - address: 2150
+    type: int16
+    mode: holding
+    initial_value: 550  # target_high_temperature (55.0°C)
+
+  # Buffer 1 Sensors (3000-3050)
+  - address: 3000
+    type: int16
+    mode: holding
+    initial_value: 0  # error_number
+  - address: 3001
+    type: uint16
+    mode: holding
+    initial_value: 1  # operating_state (Heating)
+  - address: 3002
+    type: int16
+    mode: holding
+    initial_value: 400  # actual_high_temp (40.0°C)
+  - address: 3050
+    type: int16
+    mode: holding
+    initial_value: 450  # maximum_buffer_temp (45.0°C)
+
+  # Buffer 2 Sensors (3000-3050)
+  - address: 3100
+    type: int16
+    mode: holding
+    initial_value: 0  # error_number
+  - address: 3101
+    type: uint16
+    mode: holding
+    initial_value: 1  # operating_state (Heating)
+  - address: 3102
+    type: int16
+    mode: holding
+    initial_value: 400  # actual_high_temp (40.0°C)
+  - address: 3150
+    type: int16
+    mode: holding
+    initial_value: 450  # maximum_buffer_temp (45.0°C)    
+
+  # Solar 1 Sensors (4000-4050)
+  - address: 4000
+    type: int16
+    mode: holding
+    initial_value: 0  # error_number
+  - address: 4001
+    type: uint16
+    mode: holding
+    initial_value: 1  # operating_state (Active)
+  - address: 4002
+    type: int16
+    mode: holding
+    initial_value: 650  # collector_temperature (65.0°C)
+  - address: 4003
+    type: int16
+    mode: holding
+    initial_value: 450  # storage_temperature (45.0°C)
+  - address: 4004
+    type: int16
+    mode: holding
+    initial_value: 50  # power_current (5.0 kW)
+  - address: 4005
+    type: int32
+    mode: holding
+    initial_value: 10000  # energy_total (10000 kWh)
+
+  # Heating Circuit 1 Sensors (5000-5050)
+  - address: 5000
+    type: int16
+    mode: holding
+    initial_value: 0  # error_number
+  - address: 5001
+    type: uint16
+    mode: holding
+    initial_value: 0  # operating_state (Heating)
+  - address: 5002
+    type: int16
+    mode: holding
+    initial_value: 350  # flow_line_temperature (35.0°C)
+  - address: 5003
+    type: int16
+    mode: holding
+    initial_value: 300  # return_line_temperature (30.0°C)
+  - address: 5004
+    type: int16
+    mode: holding
+    initial_value: 220  # room_device_temperature (22.0°C)
+  - address: 5050
+    type: int16
+    mode: holding
+    initial_value: 50  # set_flow_line_offset_temperature (5.0°C)
+  - address: 5051
+    type: int16
+    mode: holding
+    initial_value: 210  # target_room_temperature (21.0°C)
+  - address: 5052
+    type: int16
+    mode: holding
+    initial_value: 240  # cooling_mode_room_temperature (24.0°C)
+
+
+    # Heating Circuit 2 Sensors (5100-5150)
+  - address: 5100
+    type: int16
+    mode: holding
+    initial_value: 0  # error_number
+  - address: 5101
+    type: uint16
+    mode: holding
+    initial_value: 0  # operating_state (Heating)
+  - address: 5102
+    type: int16
+    mode: holding
+    initial_value: 350  # flow_line_temperature (35.0°C)
+  - address: 5103
+    type: int16
+    mode: holding
+    initial_value: 300  # return_line_temperature (30.0°C)
+  - address: 5104
+    type: int16
+    mode: holding
+    initial_value: 220  # room_device_temperature (22.0°C)
+  - address: 5150
+    type: int16
+    mode: holding
+    initial_value: 50  # set_flow_line_offset_temperature (5.0°C)
+  - address: 5151
+    type: int16
+    mode: holding
+    initial_value: 210  # target_room_temperature (21.0°C)
+  - address: 5152
+    type: int16
+    mode: holding
+    initial_value: 240  # cooling_mode_room_temperature (24.0°C)

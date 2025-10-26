@@ -27,6 +27,12 @@ REGISTER_TYPES = {
 def query_modbus():
     host_ip = host_ip_entry.get()
     try:
+        port = int(port_entry.get())
+    except ValueError:
+        messagebox.showerror("Input Error", "Port must be an integer.")
+        return
+    
+    try:
         register = int(register_entry.get())
     except ValueError:
         messagebox.showerror("Input Error", "Register must be an integer.")
@@ -41,7 +47,7 @@ def query_modbus():
     count = 2 if "32bit" in register_type else 1
 
     try:
-        client = ModbusTcpClient(host_ip)
+        client = ModbusTcpClient(host_ip, port=port)
         if not client.connect():
             messagebox.showerror("Connection Error", "Unable to connect to Modbus server.")
             return
@@ -113,26 +119,33 @@ host_ip_entry = ttk.Entry(main_frame)
 host_ip_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 host_ip_entry.insert(0, "localhost")
 
+# Port input
+port_label = ttk.Label(main_frame, text="Port:")
+port_label.grid(row=1, column=0, padx=5, pady=5, sticky="e")
+port_entry = ttk.Entry(main_frame)
+port_entry.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+port_entry.insert(0, "5020")
+
 # Register input
 register_label = ttk.Label(main_frame, text="Register:")
-register_label.grid(row=1, column=0, padx=5, pady=5, sticky="e")
+register_label.grid(row=2, column=0, padx=5, pady=5, sticky="e")
 register_entry = ttk.Entry(main_frame)
-register_entry.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+register_entry.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
 
 # Register type selection
 register_type_label = ttk.Label(main_frame, text="Register Type:")
-register_type_label.grid(row=2, column=0, padx=5, pady=5, sticky="e")
+register_type_label.grid(row=3, column=0, padx=5, pady=5, sticky="e")
 register_type_combobox = ttk.Combobox(main_frame, values=list(REGISTER_TYPES.keys()))
-register_type_combobox.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
+register_type_combobox.grid(row=3, column=1, padx=5, pady=5, sticky="ew")
 register_type_combobox.set("Temperature (0.1°C)")
 
 # Query button
 query_button = ttk.Button(main_frame, text="Query Register", command=query_modbus)
-query_button.grid(row=3, column=0, columnspan=2, pady=10)
+query_button.grid(row=4, column=0, columnspan=2, pady=10)
 
 # Result text area
 result_text = tk.Text(main_frame, height=5, width=40)
-result_text.grid(row=4, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
+result_text.grid(row=5, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
 
 # Configure grid weights
 main_frame.columnconfigure(1, weight=1)
