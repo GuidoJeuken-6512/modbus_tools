@@ -2,26 +2,28 @@
 
 ## Übersicht (Deutsch)
 
-Dieses Projekt enthält drei Hauptkomponenten:
+Dieses Projekt enthält vier Hauptkomponenten:
 
-### 1. Modbus Client (GUI) (`modbus_client.py`)
+### 1. Modbus Client (GUI) (`client_gui.py`)
 - Grafische Benutzeroberfläche (GUI) zur Abfrage von Modbus TCP Servern
 - Ermöglicht das Auslesen von Holding- und Input-Register
+- Konfigurierbarer Modbus Port (Standard: 5020)
 - Voreingestellte Werte für Host-IP, Register und Registertyp, aber frei änderbar
 - Zeigt die Antwort des Servers in einem Dialogfenster an
 
-### 2. Modbus Client (Kommandozeile) (`client.py`)
+### 2. Modbus Client (Kommandozeile) (`client_cli.py`)
 - Kommandozeilen-Tool für automatisierte Modbus TCP Abfragen
 - Liest vordefinierte Registergruppen (z.B. Temperatur, Solar) und skaliert Werte automatisch
 - Umfangreiches Logging (INFO/ERROR) für Debugging und Entwicklung
-- Beispielaufruf: `python client.py`
+- Beispielaufruf: `python client_cli.py`
 - Ideal für automatisierte Tests und zur schnellen Überprüfung von Registerwerten
 - Registeradressen und Skalierungsfaktoren sind im Code anpassbar
 
 ### 3. Modbus Server (`server.py`)
 - Implementiert einen einfachen Modbus TCP Server
 - Dient zu Test- und Entwicklungszwecken
-- Registerwerte können über Konfigurationsdateien (`config/register.yaml`) angepasst werden
+- Registerwerte können über Konfigurationsdateien (`registers.yaml`) angepasst werden
+- Läuft auf Port 5020
 
 #### Server Logging-Konfiguration
 Der Server bietet flexible Logging-Optionen, die über Konstanten am Anfang der `server.py` gesteuert werden können:
@@ -48,6 +50,103 @@ Verfügbare Logging-Optionen:
    - Bei `True`: Loggt alle Leseoperationen von Registern
    - Bei `False`: Unterdrückt Leseoperationen-Logs
    - Standard: `False`
+
+### 4. Modbus Server mit GUI (`GuiServer/`)
+- **Neue Komponente** mit erweiterten Features für die Modbus-Simulation
+- Grafische Oberfläche mit vollständiger Kontrolle über alle Modbus-Register
+- Unterstützt Lambda Wärmepumpen-Simulation (1 oder 2 Wärmepumpen)
+- Läuft auf Port 5020
+
+#### Hauptfeatures der GUI-Version:
+
+**Register-Konfiguration:**
+- Alle State-Register über Dropdown-Menüs anpassbar
+- Mapping-Texte aus `const_mapping.py` (z.B. "Heating", "Cooling", "Ready")
+- Persistente Speicherung in `server_state.json`
+- Alle Änderungen werden ohne Server-Neustart übernommen
+
+**Wärmepumpen-Modus:**
+- Umschaltung zwischen 1 und 2 Wärmepumpen
+- Bei 2-WP-Modus: Alle Register für WP2 werden angezeigt
+- Bei 1-WP-Modus: WP2-Register werden ausgeblendet
+- Server filtert automatisch nur relevante Register basierend auf Modus
+
+**Auto-Inkrementierung:**
+- Akkumulator-Register (Power Consumption, Thermal Energy) erhöhen sich alle 10 Sekunden um 1
+- Funktioniert für WP1 und (bei aktiviert) WP2
+- Werte werden persistent gespeichert
+
+**Live-Logging:**
+- Anzeige aller Modbus Read/Write-Operationen
+- Filterfunktion: "Alle", "Nur Write", "Nur Read"
+- Zeigt geschriebene Werte inkl. Mapping-Texten
+- Scrollbar für langen Log-Verlauf
+
+**Modbus-Fehlermeldungen:**
+- Gibt korrekte Modbus-Exceptions für ungültige Register zurück
+- Verhindert fälschliche Autodetect-Ergebnisse bei Lambda-Integration
+- Ausgabe von Exception Code 2 (Illegal Data Address) für nicht vorhandene Register
+
+**Dreispaltiges Layout:**
+- Spalte 1: WP1 + gemeinsame Komponenten (Ambient, Solar, Boiler 1, Buffer 1, HC 1, E-Manager)
+- Spalte 2: WP2-Komponenten (Boiler 2, Buffer 2, HC 2) - ausgeblendet bei 1-WP-Modus
+- Spalte 3: WP-Modus-Schalter und Log-Filter
+- Unten: Log-Ausgabe über volle Breite
+
+#### Verwendung der GUI-Version:
+
+```bash
+cd GuiServer
+python server_gui.py
+```
+
+**Startup-Verhalten:**
+1. GUI öffnet sich mit Server-Stop-Button
+2. Wählen Sie 1-WP oder 2-WP Modus
+3. Konfigurieren Sie Register über Dropdown-Menüs
+4. Klicken Sie "Start Server"
+5. Modbus-Server läuft auf Port 5020 mit Slave ID 1
+6. Alle Änderungen werden sofort übernommen
+7. Akkumulatoren erhöhen sich automatisch alle 10 Sekunden
+
+**Speicherung:**
+- Alle Konfigurationen werden in `GuiServer/server_state.json` gespeichert
+- Bei Neustart werden die letzten Werte geladen
+- Akkumulator-Werte werden fortgesetzt
+
+**Integration mit Lambda Home Assistant:**
+- Server läuft mit Slave ID 1 (Lambda erwartet Unit ID 1)
+- Gibt korrekte Modbus-Fehlermeldungen für ungültige Register zurück
+- Unterstützt alle Lambda-Register aus `registers.yaml`
+- Filtert automatisch nur relevante Register basierend auf 1/2-WP-Modus
+- Vollständig kompatibel mit der Lambda Home Assistant Integration
+
+## Installation
+
+### Abhängigkeiten
+
+```bash
+pip install pymodbus pyyaml tkinter
+```
+
+### Verzeichnisstruktur
+
+```
+modbus_tools/
+├── server.py                    # Einfacher Modbus Server
+├── registers.yaml               # Register-Konfiguration
+├── const_mapping.py             # Mapping-Texte für Register-Werte
+├── client_gui.py                # GUI Modbus Client
+├── client_cli.py                # CLI Modbus Client
+├── modbus_scanner.py            # Scanner-Tool
+└── GuiServer/                   # GUI Server mit erweiterten Features
+    ├── server_gui.py            # Haupt-GUI-Anwendung
+    ├── server_threaded.py       # Threaded Modbus Server
+    ├── register_manager.py      # State-Management
+    ├── server_state.json        # Persistente Konfiguration (auto-generiert)
+    ├── registers.yaml           # Register-Konfiguration
+    └── const_mapping.py         # Mapping-Texte
+```
 
 ## Usage (English)
 
