@@ -252,9 +252,12 @@ def setup_modbus_server(registers, log_queue=None):
         mode = reg['mode']
         value = int(reg['initial_value'])
         
-        # Handle 32-bit values
+        # Handle 32-bit values - Big-Endian format
         if reg_type in ['int32', 'uint32']:
-            values = [(value >> 16) & 0xFFFF, value & 0xFFFF]
+            # Big-Endian: High word first, then low word
+            high_word = (value >> 16) & 0xFFFF
+            low_word = value & 0xFFFF
+            values = [high_word, low_word]
         else:
             values = [value]
         

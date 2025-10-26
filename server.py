@@ -169,10 +169,13 @@ def setup_modbus_server(registers):
         
         logger.info(f"Setting register - Address: {addr}, Type: {reg_type}, Mode: {mode}, Value: 0x{value:x} ({value})")
         
-        # Handle 32-bit values
+        # Handle 32-bit values - Big-Endian format
         if reg_type in ['int32', 'uint32']:
-            values = [(value >> 16) & 0xFFFF, value & 0xFFFF]
-            logger.info(f"32-bit register split: [0x{values[0]:04x}, 0x{values[1]:04x}]")
+            # Big-Endian: High word first, then low word
+            high_word = (value >> 16) & 0xFFFF
+            low_word = value & 0xFFFF
+            values = [high_word, low_word]
+            logger.info(f"32-bit register split: [0x{high_word:04x}, 0x{low_word:04x}]")
         else:
             values = [value]
         

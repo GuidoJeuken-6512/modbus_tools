@@ -351,12 +351,25 @@ class ModbusGUI:
                 accumulator_addrs.extend([1120, 1122])
             
             for addr in accumulator_addrs:
-                current = get_register_value(self.state, addr, 0)
-                new_value = current + 1
-                update_register_value(self.state, addr, new_value)
+                # Read current 32-bit value correctly
+                current_high = get_register_value(self.state, addr, 0)
+                current_low = get_register_value(self.state, addr + 1, 0)
+                current_value = (current_high << 16) | current_low
+                
+                # Increment by 10 (as requested)
+                new_value = current_value + 10
+                
+                # Split back into high and low words
+                new_high = (new_value >> 16) & 0xFFFF
+                new_low = new_value & 0xFFFF
+                
+                # Update both registers
+                update_register_value(self.state, addr, new_high)
+                update_register_value(self.state, addr + 1, new_low)
                 
                 if self.server_thread:
-                    self.server_thread.update_register_value(addr, new_value)
+                    self.server_thread.update_register_value(addr, new_high)
+                    self.server_thread.update_register_value(addr + 1, new_low)
         
         # Schedule next update
         self.accumulator_timer = self.root.after(10000, self.start_accumulator_timer)
