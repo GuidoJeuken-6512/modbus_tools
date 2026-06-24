@@ -14,7 +14,8 @@
       "PowerShell(.\\\\.venv\\\\Scripts\\\\pip.exe install pymodbus==3.13.1 -q)",
       "PowerShell(& \"C:\\\\cursor\\\\modbus_tools\\\\.venv\\\\Scripts\\\\pip.exe\" install pymodbus==3.9.2 -q)",
       "Bash(\"/c/cursor/modbus_tools/.venv/Scripts/python.exe\" /tmp/test_server_full2.py)",
-      "PowerShell(& \"C:\\\\cursor\\\\modbus_tools\\\\.venv\\\\Scripts\\\\pip.exe\" install pymodbus==3.11.4 -q)"
+      "PowerShell(& \"C:\\\\cursor\\\\modbus_tools\\\\.venv\\\\Scripts\\\\pip.exe\" install pymodbus==3.11.4 -q)",
+      "Bash(git config *)"
     ]
   }
 }
