@@ -6,7 +6,7 @@ from pymodbus.server import StartTcpServer
 from pymodbus.datastore import ModbusServerContext
 from pymodbus.datastore import ModbusDeviceContext, ModbusSequentialDataBlock
 from pymodbus.exceptions import ModbusException
-from pymodbus.pdu import ExceptionResponse
+from pymodbus.constants import ExcCodes
 
 import yaml
 import os
@@ -45,21 +45,19 @@ class LoggingSlaveContext(ModbusDeviceContext):
         if count == 1:
             # Single register read - strict validation
             if address not in self.valid_addresses:
-                exception_code = 2  # Illegal Data Address
-                self.log_message("ERROR", address, count, f"Invalid single register address - Exception Code {exception_code}", f"read_function_{fx}")
-                return ExceptionResponse(fx, exception_code)
+                self.log_message("ERROR", address, count, "Invalid single register address - Exception Code 2", f"read_function_{fx}")
+                return ExcCodes.ILLEGAL_ADDRESS
         else:
             # Batch read - less strict validation
             # Only validate if address is completely outside the valid range
             min_valid_addr = min(self.valid_addresses) if self.valid_addresses else 0
             max_valid_addr = max(self.valid_addresses) if self.valid_addresses else 0
-            
+
             # Allow reading beyond valid addresses - just return zeros for undefined registers
             # Only throw exception for addresses that are completely out of range
             if address < min_valid_addr or address > max_valid_addr + 1000:  # Allow some buffer
-                exception_code = 2  # Illegal Data Address
-                self.log_message("ERROR", address, count, f"Address completely out of range - Exception Code {exception_code}", f"read_function_{fx}")
-                return ExceptionResponse(fx, exception_code)
+                self.log_message("ERROR", address, count, "Address completely out of range - Exception Code 2", f"read_function_{fx}")
+                return ExcCodes.ILLEGAL_ADDRESS
 
         values = super().getValues(fx, address, count)
         function_name = {
@@ -90,9 +88,8 @@ class LoggingSlaveContext(ModbusDeviceContext):
         # Allow writing beyond valid addresses - just ignore undefined registers
         # Only throw exception for addresses that are completely out of range
         if address < min_valid_addr or address > max_valid_addr + 1000:  # Allow some buffer
-            exception_code = 2  # Illegal Data Address
-            self.log_message("ERROR", address, len(values), f"Address completely out of range - Exception Code {exception_code}", f"write_function_{fx}")
-            return ExceptionResponse(fx, exception_code)
+            self.log_message("ERROR", address, len(values), "Address completely out of range - Exception Code 2", f"write_function_{fx}")
+            return ExcCodes.ILLEGAL_ADDRESS
 
         function_name = {
             5: "write_single_coil",
@@ -228,21 +225,23 @@ def setup_modbus_server(registers, log_queue=None):
     ir_size = max_ir_addr + 1
     co_size = max_co_addr + 1
     
-    hr_block = (ModbusSequentialDataBlock(0, [0] * hr_size) 
+    # pymodbus >= 3.13 treats `address` as 1-based internally (address-1 is the
+    # actual register index), so pass 1 to start the block at register 0.
+    hr_block = (ModbusSequentialDataBlock(1, [0] * hr_size)
                 if max_hr_addr > 0 else None)
-    ir_block = (ModbusSequentialDataBlock(0, [0] * ir_size) 
+    ir_block = (ModbusSequentialDataBlock(1, [0] * ir_size)
                 if max_ir_addr > 0 else None)
-    co_block = (ModbusSequentialDataBlock(0, [0] * co_size) 
+    co_block = (ModbusSequentialDataBlock(1, [0] * co_size)
                 if max_co_addr > 0 else None)
-    
+
     # Create slave context with logging and valid addresses
     store = LoggingSlaveContext(
         log_queue=log_queue,
         valid_addresses=valid_addresses,
-        hr=hr_block if hr_block else ModbusSequentialDataBlock(0, [0]),
-        ir=ir_block if ir_block else ModbusSequentialDataBlock(0, [0]),
-        co=co_block if co_block else ModbusSequentialDataBlock(0, [0]),
-        di=ModbusSequentialDataBlock(0, [0])
+        hr=hr_block if hr_block else ModbusSequentialDataBlock(1, [0]),
+        ir=ir_block if ir_block else ModbusSequentialDataBlock(1, [0]),
+        co=co_block if co_block else ModbusSequentialDataBlock(1, [0]),
+        di=ModbusSequentialDataBlock(1, [0])
     )
     
     # Initialize values

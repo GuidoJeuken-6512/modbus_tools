@@ -337,7 +337,8 @@ class ModbusGUI:
         
         # Stop accumulator timer
         if self.accumulator_timer:
-            self.accumulator_timer.cancel()
+            self.root.after_cancel(self.accumulator_timer)
+            self.accumulator_timer = None
         
         self.add_log("Server stopped")
         

@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(py -3 --version)",
+      "Bash(where python *)",
+      "PowerShell(python --version)",
+      "PowerShell(python -m venv .venv)",
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m pip install --upgrade pip)",
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\pip.exe install -r requirements.txt)",
+      "PowerShell(& \".\\\\.venv\\\\Scripts\\\\python.exe\" client_cli.py)",
+      "Read(//c/cursor/modbus_tools/.venv/Lib/site-packages/pymodbus/datastore/**)",
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\pip.exe install pymodbus==3.8.6 -q)",
+      "Bash(\"/c/cursor/modbus_tools/.venv/Scripts/python.exe\" /tmp/test_setup.py)",
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\pip.exe install pymodbus==3.13.1 -q)",
+      "PowerShell(& \"C:\\\\cursor\\\\modbus_tools\\\\.venv\\\\Scripts\\\\pip.exe\" install pymodbus==3.9.2 -q)",
+      "Bash(\"/c/cursor/modbus_tools/.venv/Scripts/python.exe\" /tmp/test_server_full2.py)",
+      "PowerShell(& \"C:\\\\cursor\\\\modbus_tools\\\\.venv\\\\Scripts\\\\pip.exe\" install pymodbus==3.11.4 -q)"
+    ]
+  }
+}
