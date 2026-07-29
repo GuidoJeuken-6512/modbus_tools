@@ -19,7 +19,7 @@ Dieses Projekt enthält vier Hauptkomponenten:
 - Ideal für automatisierte Tests und zur schnellen Überprüfung von Registerwerten
 - Registeradressen und Skalierungsfaktoren sind im Code anpassbar
 
-### 3. Modbus Server (`server.py`)
+### 3. Modbus Server (`GuiServer.py`)
 - Implementiert einen einfachen Modbus TCP Server
 - Dient zu Test- und Entwicklungszwecken
 - Registerwerte können über Konfigurationsdateien (`registers.yaml`) angepasst werden
