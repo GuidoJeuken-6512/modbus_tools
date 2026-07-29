@@ -1,8 +1,172 @@
 # Modbus Tools
 
+**Languages:** [English](#english) | [Deutsch](#deutsch)
+
+---
+
+<a id="english"></a>
+## Overview (English)
+
+*([Zum deutschen Abschnitt springen](#deutsch))*
+
+This project contains Modbus client tools, a Modbus server with GUI, and a few helper/test scripts.
+
+### 1. Modbus Client (GUI) (`client_gui.py`)
+- Graphical user interface (GUI) for querying Modbus TCP servers
+- Allows reading holding and input registers
+- Configurable Modbus port (default: 5020)
+- Pre-filled values for host IP, register, and register type (all editable)
+- Displays the server response in a dialog window
+
+### 2. Modbus Client (CLI) (`client_cli.py`)
+- Command-line tool for automated Modbus TCP queries
+- Reads predefined register groups (e.g., temperature, solar) and applies scaling automatically
+- Extensive logging (INFO/ERROR) for debugging and development
+- Example usage: `python client_cli.py`
+- Ideal for automated tests and quick register value checks
+- Register addresses and scaling factors can be adjusted in the code
+
+### 3. Modbus Register Scanner (`modbus_scanner.py`)
+- GUI tool for scanning an address range on a Modbus TCP server
+- Scans holding or input registers over a configurable start/stop range
+- Exports results as CSV, and as a formatted Excel file if `openpyxl` is installed
+- Runs the scan in a background thread so the GUI stays responsive
+- Useful for exploring unknown/new Modbus devices (or the simulator)
+
+### 4. Modbus Server with GUI (`GuiServer/`)
+- Simulates a Modbus TCP server for Lambda heat pumps (1 or 2 heat pumps)
+- Full graphical control over all Modbus registers
+- Runs on port 5020
+- Replaces the former CLI-only server that used to live at the project root (`server.py`), which has been removed
+
+#### Key features of the GUI version:
+
+**Register configuration:**
+- All state registers adjustable via dropdown menus
+- Mapping texts from `GuiServer/const_mapping.py` (e.g. "Heating", "Cooling", "Ready")
+- Persistent storage in `GuiServer/server_state.json`
+- All changes take effect without restarting the server
+
+**Heat pump mode:**
+- Switch between 1 and 2 heat pumps
+- In 2-HP mode: all registers for HP2 are shown
+- In 1-HP mode: HP2 registers are hidden
+- The server automatically filters only the relevant registers based on the mode
+- The mode switch is locked while the server is running (prevents inconsistent register sets)
+
+**Simulation modes:**
+- Configurable operating mode (heating, hot water, cooling, defrost) via `MODE_CASCADE` in `const_mapping.py`
+- Switching the mode automatically sets the associated HP, HC, boiler, and buffer registers of all active heat pumps
+- Configurable word order (high-word-first / low-word-first) for 32-bit registers
+
+**Auto-increment:**
+- Accumulator registers (power consumption, thermal energy) increase by 1 every 10 seconds
+- Works for HP1 and (if enabled) HP2
+- Values are persisted
+
+**Live logging:**
+- Displays all Modbus read/write operations
+- Filter options: "All", "Write only", "Read only"
+- Shows written values including mapping texts
+- Scrollbar for long log history
+
+**Modbus error responses:**
+- Returns correct Modbus exceptions for invalid registers
+- Prevents false autodetect results in the Lambda integration
+- Returns Exception Code 2 (Illegal Data Address) for non-existent registers
+
+**Three-column layout:**
+- Column 1: HP1 + shared components (ambient, solar, boiler 1, buffer 1, HC 1, E-manager)
+- Column 2: HP2 components (boiler 2, buffer 2, HC 2) - hidden in 1-HP mode
+- Column 3: HP mode switch and log filter
+- Bottom: log output spanning the full width
+
+#### Using the GUI version:
+
+```bash
+cd GuiServer
+python GuiServer.py
+```
+
+**Startup behavior:**
+1. GUI opens with the server stopped
+2. Select 1-HP or 2-HP mode
+3. Configure registers via dropdown menus
+4. Click "Start Server"
+5. Modbus server runs on port 5020 with slave ID 1
+6. All changes are applied immediately
+7. Accumulators increase automatically every 10 seconds
+
+**Persistence:**
+- All configuration is stored in `GuiServer/server_state.json`
+- The last values are loaded on restart
+- Accumulator values continue from where they left off
+
+**Integration with Lambda Home Assistant:**
+- Server runs with slave ID 1 (Lambda expects unit ID 1)
+- Returns correct Modbus error responses for invalid registers
+- Supports all Lambda registers from `registers.yaml`
+- Automatically filters only relevant registers based on 1/2-HP mode
+- Fully compatible with the Lambda Home Assistant integration
+
+### 5. Test scripts (project root, `test_*.py`)
+Small standalone scripts for manually testing the running GUI server (`GuiServer/GuiServer.py`) via a `pymodbus` client against `localhost:5020`. No test framework (e.g. `pytest`) — just run `python <file>.py` directly while the server is running.
+
+- `test_connection.py` – simple connection test, reads register 1000
+- `test_batch.py` – batch read across a range with valid/invalid registers
+- `test_exception.py` – checks that an invalid register address (9999) correctly returns a Modbus exception
+- `test_uint32.py` – checks correct big-endian encoding of 32-bit registers (e.g. register 1020)
+- `test_accumulator.py` – checks that accumulator registers auto-increment as expected
+- `test_real_lambda.py` – connection test against a real Lambda device (not the simulator), adjust the address in the script
+
+### Other files in the project root
+
+- `const_mapping.py` – outdated copy of the mapping texts from `GuiServer/const_mapping.py`. Not imported by any script in the project root, kept only as legacy leftover.
+- `registers.yaml` – register configuration; used as a reference in the root, while `GuiServer/registers.yaml` is the authoritative copy.
+- `server_state.json` – outdated state leftover from the removed root `server.py`; the file actually in use is `GuiServer/server_state.json`.
+
+### Installation
+
+#### Dependencies
+
+```bash
+pip install pymodbus pyyaml tkinter
+```
+
+The Excel export in `modbus_scanner.py` additionally requires `openpyxl` (optional, see `requirements.txt`).
+
+#### Directory structure
+
+```
+modbus_tools/
+├── registers.yaml               # Register configuration (reference)
+├── const_mapping.py             # Outdated copy, unused (see above)
+├── client_gui.py                # GUI Modbus client
+├── client_cli.py                # CLI Modbus client
+├── modbus_scanner.py            # Register scanner with CSV/Excel export
+├── test_connection.py           # Test script: connection
+├── test_batch.py                # Test script: batch read
+├── test_exception.py            # Test script: Modbus exceptions
+├── test_uint32.py               # Test script: 32-bit registers
+├── test_accumulator.py          # Test script: accumulator registers
+├── test_real_lambda.py          # Test script: real Lambda device
+└── GuiServer/                   # GUI server with extended features
+    ├── GuiServer.py              # Main GUI application
+    ├── server_threaded.py       # Threaded Modbus server
+    ├── register_manager.py      # State management
+    ├── server_state.json        # Persistent configuration (auto-generated)
+    ├── registers.yaml           # Register configuration
+    └── const_mapping.py         # Mapping texts
+```
+
+---
+
+<a id="deutsch"></a>
 ## Übersicht (Deutsch)
 
-Dieses Projekt enthält vier Hauptkomponenten:
+*([Jump to the English section](#english))*
+
+Dieses Projekt enthält Modbus-Client-Werkzeuge, einen Modbus-Server mit GUI sowie einige Hilfs- und Testskripte.
 
 ### 1. Modbus Client (GUI) (`client_gui.py`)
 - Grafische Benutzeroberfläche (GUI) zur Abfrage von Modbus TCP Servern
@@ -19,50 +183,25 @@ Dieses Projekt enthält vier Hauptkomponenten:
 - Ideal für automatisierte Tests und zur schnellen Überprüfung von Registerwerten
 - Registeradressen und Skalierungsfaktoren sind im Code anpassbar
 
-### 3. Modbus Server (`GuiServer.py`)
-- Implementiert einen einfachen Modbus TCP Server
-- Dient zu Test- und Entwicklungszwecken
-- Registerwerte können über Konfigurationsdateien (`registers.yaml`) angepasst werden
-- Läuft auf Port 5020
-
-#### Server Logging-Konfiguration
-Der Server bietet flexible Logging-Optionen, die über Konstanten am Anfang der `server.py` gesteuert werden können:
-
-```python
-# Logging-Konfigurationskonstanten
-LOG_ERRORS = True        # Steuert das Logging von Fehlermeldungen
-LOG_WRITE_REGISTERS = True  # Steuert das Logging von Schreiboperationen
-LOG_READ_REGISTERS = False  # Steuert das Logging von Leseoperationen
-```
-
-Verfügbare Logging-Optionen:
-1. **Fehler-Logging** (`LOG_ERRORS`)
-   - Bei `True`: Loggt alle Fehlermeldungen, einschließlich Schreibverifizierungsfehler
-   - Bei `False`: Unterdrückt Fehlermeldungen
-   - Standard: `True`
-
-2. **Register-Schreib-Logging** (`LOG_WRITE_REGISTERS`)
-   - Bei `True`: Loggt alle Schreiboperationen auf Register
-   - Bei `False`: Unterdrückt Schreiboperationen-Logs
-   - Standard: `True`
-
-3. **Register-Lese-Logging** (`LOG_READ_REGISTERS`)
-   - Bei `True`: Loggt alle Leseoperationen von Registern
-   - Bei `False`: Unterdrückt Leseoperationen-Logs
-   - Standard: `False`
+### 3. Modbus Register Scanner (`modbus_scanner.py`)
+- Grafisches Tool zum Scannen eines Adressbereichs eines Modbus TCP Servers
+- Durchsucht wahlweise Holding- oder Input-Register über einen konfigurierbaren Start-/Stop-Bereich
+- Exportiert die Ergebnisse als CSV, bei installiertem `openpyxl` zusätzlich als formatierte Excel-Datei
+- Läuft als eigenständiger Scan in einem Hintergrund-Thread, damit die GUI währenddessen reagibel bleibt
+- Nützlich, um unbekannte oder neue Modbus-Geräte (bzw. den Simulator) initial zu erkunden
 
 ### 4. Modbus Server mit GUI (`GuiServer/`)
-- **Neue Komponente** mit erweiterten Features für die Modbus-Simulation
+- Simuliert einen Modbus-TCP-Server für Lambda Wärmepumpen (1 oder 2 Wärmepumpen)
 - Grafische Oberfläche mit vollständiger Kontrolle über alle Modbus-Register
-- Unterstützt Lambda Wärmepumpen-Simulation (1 oder 2 Wärmepumpen)
 - Läuft auf Port 5020
+- Ersetzt den früheren, rein Kommandozeilen-basierten Server im Projekt-Root (`server.py`), der aus dem Projekt entfernt wurde
 
 #### Hauptfeatures der GUI-Version:
 
 **Register-Konfiguration:**
 - Alle State-Register über Dropdown-Menüs anpassbar
-- Mapping-Texte aus `const_mapping.py` (z.B. "Heating", "Cooling", "Ready")
-- Persistente Speicherung in `server_state.json`
+- Mapping-Texte aus `GuiServer/const_mapping.py` (z.B. "Heating", "Cooling", "Ready")
+- Persistente Speicherung in `GuiServer/server_state.json`
 - Alle Änderungen werden ohne Server-Neustart übernommen
 
 **Wärmepumpen-Modus:**
@@ -70,6 +209,12 @@ Verfügbare Logging-Optionen:
 - Bei 2-WP-Modus: Alle Register für WP2 werden angezeigt
 - Bei 1-WP-Modus: WP2-Register werden ausgeblendet
 - Server filtert automatisch nur relevante Register basierend auf Modus
+- Die Modus-Umschaltung ist gesperrt, solange der Server läuft (verhindert inkonsistente Registersätze)
+
+**Simulationsmodi:**
+- Konfigurierbare Betriebsart (Heizen, Warmwasser, Kühlen, Abtauen) über `MODE_CASCADE` in `const_mapping.py`
+- Setzt beim Wechsel automatisch die zugehörigen HP-, HC-, Boiler- und Buffer-Register aller aktiven Wärmepumpen
+- Konfigurierbare Wortreihenfolge (High-Word-first / Low-Word-first) für 32-Bit-Register
 
 **Auto-Inkrementierung:**
 - Akkumulator-Register (Power Consumption, Thermal Energy) erhöhen sich alle 10 Sekunden um 1
@@ -97,7 +242,7 @@ Verfügbare Logging-Optionen:
 
 ```bash
 cd GuiServer
-python server_gui.py
+python GuiServer.py
 ```
 
 **Startup-Verhalten:**
@@ -121,81 +266,55 @@ python server_gui.py
 - Filtert automatisch nur relevante Register basierend auf 1/2-WP-Modus
 - Vollständig kompatibel mit der Lambda Home Assistant Integration
 
-## Installation
+### 5. Testskripte (Projekt-Root, `test_*.py`)
+Kleine, eigenständige Skripte zum manuellen Testen des laufenden GUI-Servers (`GuiServer/GuiServer.py`) via `pymodbus`-Client gegen `localhost:5020`. Kein Test-Framework (z.B. `pytest`), einfach direkt mit `python <datei>.py` ausführbar, während der Server läuft.
 
-### Abhängigkeiten
+- `test_connection.py` – einfacher Verbindungstest, liest Register 1000
+- `test_batch.py` – Batch-Lesezugriff über einen Bereich mit gültigen/ungültigen Registern
+- `test_exception.py` – prüft, ob eine ungültige Register-Adresse (9999) korrekt eine Modbus-Exception liefert
+- `test_uint32.py` – prüft das korrekte Big-Endian-Encoding von 32-Bit-Registern (z.B. Register 1020)
+- `test_accumulator.py` – prüft, ob sich Akkumulator-Register wie erwartet automatisch erhöhen
+- `test_real_lambda.py` – Verbindungstest gegen ein echtes Lambda-Gerät (nicht den Simulator), Adresse im Skript anpassen
+
+### Sonstige Dateien im Projekt-Root
+
+- `const_mapping.py` – veraltete Kopie der Mapping-Texte aus `GuiServer/const_mapping.py`. Wird von keinem Skript im Projekt-Root importiert und ist nur als Altlast vorhanden.
+- `registers.yaml` – Register-Konfiguration; wird sowohl als Referenz im Root als auch (maßgeblich) von `GuiServer/registers.yaml` verwendet.
+- `server_state.json` – veralteter State-Rest des entfernten Root-`server.py`; die aktuell genutzte Datei liegt unter `GuiServer/server_state.json`.
+
+### Installation
+
+#### Abhängigkeiten
 
 ```bash
 pip install pymodbus pyyaml tkinter
 ```
 
-### Verzeichnisstruktur
+Für den Excel-Export in `modbus_scanner.py` wird zusätzlich `openpyxl` benötigt (optional, siehe `requirements.txt`).
+
+#### Verzeichnisstruktur
 
 ```
 modbus_tools/
-├── server.py                    # Einfacher Modbus Server
-├── registers.yaml               # Register-Konfiguration
-├── const_mapping.py             # Mapping-Texte für Register-Werte
+├── registers.yaml               # Register-Konfiguration (Referenz)
+├── const_mapping.py             # Veraltete Kopie, ungenutzt (siehe oben)
 ├── client_gui.py                # GUI Modbus Client
 ├── client_cli.py                # CLI Modbus Client
-├── modbus_scanner.py            # Scanner-Tool
+├── modbus_scanner.py            # Register-Scanner mit CSV/Excel-Export
+├── test_connection.py           # Testskript: Verbindung
+├── test_batch.py                # Testskript: Batch-Lesezugriff
+├── test_exception.py            # Testskript: Modbus-Exceptions
+├── test_uint32.py               # Testskript: 32-Bit-Register
+├── test_accumulator.py          # Testskript: Akkumulator-Register
+├── test_real_lambda.py          # Testskript: echtes Lambda-Gerät
 └── GuiServer/                   # GUI Server mit erweiterten Features
-    ├── server_gui.py            # Haupt-GUI-Anwendung
+    ├── GuiServer.py              # Haupt-GUI-Anwendung
     ├── server_threaded.py       # Threaded Modbus Server
     ├── register_manager.py      # State-Management
     ├── server_state.json        # Persistente Konfiguration (auto-generiert)
     ├── registers.yaml           # Register-Konfiguration
     └── const_mapping.py         # Mapping-Texte
 ```
-
-## Usage (English)
-
-This project contains three main components:
-
-### 1. Modbus Client (GUI) (`modbus_client.py`)
-- Graphical user interface (GUI) for querying Modbus TCP servers
-- Allows reading holding and input registers
-- Pre-filled values for host IP, register, and register type (all editable)
-- Displays the server response in a dialog window
-
-### 2. Modbus Client (CLI) (`client.py`)
-- Command-line tool for automated Modbus TCP queries
-- Reads predefined register groups (e.g., temperature, solar) and applies scaling automatically
-- Extensive logging (INFO/ERROR) for debugging and development
-- Example usage: `python client.py`
-- Ideal for automated tests and quick register value checks
-- Register addresses and scaling factors can be adjusted in the code
-
-### 3. Modbus Server (`server.py`)
-- Implements a simple Modbus TCP server
-- Intended for testing and development
-- Register values can be customized via configuration files (`config/register.yaml`)
-
-#### Server Logging Configuration
-The server provides flexible logging options that can be configured through constants at the beginning of `server.py`:
-
-```python
-# Logging configuration constants
-LOG_ERRORS = True        # Controls logging of error messages
-LOG_WRITE_REGISTERS = True  # Controls logging of write operations
-LOG_READ_REGISTERS = False  # Controls logging of read operations
-```
-
-Available logging options:
-1. **Error Logging** (`LOG_ERRORS`)
-   - When `True`: Logs all error messages, including write verification failures
-   - When `False`: Suppresses error messages
-   - Default: `True`
-
-2. **Write Register Logging** (`LOG_WRITE_REGISTERS`)
-   - When `True`: Logs all write operations to registers
-   - When `False`: Suppresses write operation logs
-   - Default: `True`
-
-3. **Read Register Logging** (`LOG_READ_REGISTERS`)
-   - When `True`: Logs all read operations from registers
-   - When `False`: Suppresses read operation logs
-   - Default: `False`
 
 ---
 
