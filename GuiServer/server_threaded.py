@@ -2,7 +2,7 @@
 import threading
 import queue
 from datetime import datetime
-from pymodbus.server import StartTcpServer
+from pymodbus.server import StartTcpServer, ServerStop
 from pymodbus.datastore import ModbusServerContext
 from pymodbus.datastore import ModbusDeviceContext, ModbusSequentialDataBlock
 from pymodbus.exceptions import ModbusException
@@ -62,6 +62,10 @@ class LoggingSlaveContext(ModbusDeviceContext):
                 return ExcCodes.ILLEGAL_ADDRESS
 
         values = super().getValues(fx, address, count)
+        if isinstance(values, ExcCodes):
+            self.log_message("ERROR", address, count, "Address out of range - Exception Code 2", f"read_function_{fx}")
+            return values
+
         function_name = {
             1: "read_coils",
             2: "read_discrete_inputs",
@@ -111,11 +115,14 @@ class LoggingSlaveContext(ModbusDeviceContext):
         # Store previous value for comparison
         old_value = self._last_write_values.get(address, None)
 
+        # Actual write
+        result = super().setValues(fx, address, values)
+        if isinstance(result, ExcCodes):
+            self.log_message("ERROR", address, len(values), "Address out of range - Exception Code 2", f"write_function_{fx}")
+            return result
+
         self.log_message("WRITE", address, len(values),
                         formatted_values, function_name)
-
-        # Actual write
-        super().setValues(fx, address, values)
 
         # Store new value
         if len(values) > 0:
@@ -144,7 +151,7 @@ class ModbusServerThread(threading.Thread):
         try:
             context = setup_modbus_server(self.registers, self.log_queue, self.int32_order)
             self.context = context
-            
+
             StartTcpServer(
                 context=context,
                 address=("0.0.0.0", self.port)
@@ -152,10 +159,18 @@ class ModbusServerThread(threading.Thread):
         except Exception as e:
             if self.log_queue:
                 self.log_message("ERROR", 0, 0, f"Server error: {e}")
-        
+        finally:
+            self.running = False
+
     def stop(self):
-        """Stoppe den Server."""
-        self.running = False
+        """Stoppe den Server (schließt den TCP-Socket und beendet den blockierenden Aufruf in run())."""
+        if not self.running:
+            return
+        try:
+            ServerStop()
+        except RuntimeError:
+            # Server war bereits beendet (z.B. wegen eines Fehlers in run())
+            pass
         
     def log_message(self, msg_type, address, count, values=None, function=None):
         """Log-Nachricht senden."""

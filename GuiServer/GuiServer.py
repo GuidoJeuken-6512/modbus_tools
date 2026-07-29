@@ -125,13 +125,13 @@ class ModbusGUI:
         
         self.wp_mode_var = tk.IntVar(value=self.state["heat_pump_mode"])
         
-        wp1_radio = tk.Radiobutton(col3_frame, text="1 WP", variable=self.wp_mode_var,
+        self.wp1_radio = tk.Radiobutton(col3_frame, text="1 WP", variable=self.wp_mode_var,
                                    value=1, command=self.on_mode_changed)
-        wp1_radio.pack(anchor=tk.W, padx=10)
-        
-        wp2_radio = tk.Radiobutton(col3_frame, text="2 WP", variable=self.wp_mode_var,
+        self.wp1_radio.pack(anchor=tk.W, padx=10)
+
+        self.wp2_radio = tk.Radiobutton(col3_frame, text="2 WP", variable=self.wp_mode_var,
                                    value=2, command=self.on_mode_changed)
-        wp2_radio.pack(anchor=tk.W, padx=10)
+        self.wp2_radio.pack(anchor=tk.W, padx=10)
 
         # Betriebsart (Operating Mode)
         op_mode_label = tk.Label(col3_frame, text="Betriebsart:",
@@ -410,36 +410,43 @@ class ModbusGUI:
         """Starte den Modbus-Server."""
         self.start_btn.config(state=tk.DISABLED)
         self.stop_btn.config(state=tk.NORMAL)
-        
+        self.wp1_radio.config(state=tk.DISABLED)
+        self.wp2_radio.config(state=tk.DISABLED)
+
         # Filter registers based on WP mode
         hp_mode = self.wp_mode_var.get()
         filtered_registers = filter_registers_for_mode(self.registers, hp_mode)
-        
+
         self.add_log(f"Starting server with {len(filtered_registers)} registers (WP mode: {hp_mode})")
-        
+
         self.server_thread = ModbusServerThread(self.log_queue, filtered_registers,
                                                 int32_order=self.int32_order_var.get())
         self.server_thread.start()
-        
+
         self.add_log("Server started on port 5020")
-        
+
         # Start accumulator timer
         self.start_accumulator_timer()
-        
+
     def stop_server(self):
         """Stoppe den Modbus-Server."""
         if self.server_thread:
             self.server_thread.stop()
+            self.server_thread.join(timeout=5)
+            if self.server_thread.is_alive():
+                self.add_log("WARNING: Server thread did not stop within 5s")
             self.server_thread = None
-        
+
         self.start_btn.config(state=tk.NORMAL)
         self.stop_btn.config(state=tk.DISABLED)
-        
+        self.wp1_radio.config(state=tk.NORMAL)
+        self.wp2_radio.config(state=tk.NORMAL)
+
         # Stop accumulator timer
         if self.accumulator_timer:
             self.root.after_cancel(self.accumulator_timer)
             self.accumulator_timer = None
-        
+
         self.add_log("Server stopped")
         
     def on_accumulator_toggle(self):
