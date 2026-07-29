@@ -2,3 +2,4 @@ venv/
 .venv/
 .vscode/settings.json
 GuiServer/server_state.json
+.claude/settings.json
