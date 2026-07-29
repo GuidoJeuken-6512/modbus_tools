@@ -174,3 +174,46 @@ MAIN_E_MANAGER_OPERATING_STATE = {
     3: "ERROR",
     4: "OFFLINE",
 }
+
+# --- Simulation: Betriebsart-Umschaltung ---
+# Werte entsprechen HP_OPERATING_STATE (CH, DHW, CC, DEFROST)
+MODES = {
+    "heating": 1,
+    "hot_water": 2,
+    "cooling": 3,
+    "defrost": 5,
+}
+
+# Rückwärts-Lookup: HP_OPERATING_STATE-Registerwert -> Betriebsart-Name
+MODES_BY_VALUE = {v: k for k, v in MODES.items()}
+
+# Kaskadierte Register-Werte, die pro Betriebsart auf den zugehörigen
+# HP-, HC-, Boiler- und Buffer-Registern der jeweiligen Wärmepumpe gesetzt
+# werden (siehe HP_OPERATING_STATE, HC_OPERATING_STATE, BOIL_OPERATING_STATE,
+# BUFF_OPERATING_STATE oben).
+MODE_CASCADE = {
+    "heating": {
+        "hp": MODES["heating"],       # CH
+        "hc": 0,                      # HEATING
+        "boiler": 0,                  # STBY
+        "buffer": 1,                  # HEATING
+    },
+    "hot_water": {
+        "hp": MODES["hot_water"],     # DHW
+        "hc": 15,                     # STBY
+        "boiler": 1,                  # DHW
+        "buffer": 0,                  # STBY
+    },
+    "cooling": {
+        "hp": MODES["cooling"],       # CC
+        "hc": 2,                      # COOLING
+        "boiler": 0,                  # STBY
+        "buffer": 2,                  # COOLING
+    },
+    "defrost": {
+        "hp": MODES["defrost"],       # DEFROST
+        "hc": 16,                     # STBY-HEATING
+        "boiler": 0,                  # STBY
+        "buffer": 9,                  # STBY-FROST
+    },
+}

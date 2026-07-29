@@ -10,13 +10,22 @@ from server_threaded import ModbusServerThread, load_registers
 from register_manager import (
     load_state, save_state, update_register_value, get_register_value,
     get_value_text, is_wp2_register, REGISTER_MAPPINGS,
-    filter_registers_for_mode
+    filter_registers_for_mode, encode_32bit, decode_32bit
 )
+from const_mapping import MODE_CASCADE, MODES_BY_VALUE
 
 
 class ModbusGUI:
     """Haupt-GUI-Klasse."""
-    
+
+    OPERATING_MODE_DISPLAY = {
+        "heating": "Heizen",
+        "hot_water": "Warmwasser",
+        "cooling": "Kühlen",
+        "defrost": "Defrost",
+    }
+    OPERATING_MODE_DISPLAY_REVERSE = {v: k for k, v in OPERATING_MODE_DISPLAY.items()}
+
     def __init__(self, root):
         self.root = root
         self.root.title("Modbus Server GUI")
@@ -123,7 +132,44 @@ class ModbusGUI:
         wp2_radio = tk.Radiobutton(col3_frame, text="2 WP", variable=self.wp_mode_var,
                                    value=2, command=self.on_mode_changed)
         wp2_radio.pack(anchor=tk.W, padx=10)
-        
+
+        # Betriebsart (Operating Mode)
+        op_mode_label = tk.Label(col3_frame, text="Betriebsart:",
+                                 font=("Arial", 10, "bold"))
+        op_mode_label.pack(pady=(20, 5))
+
+        self.operating_mode_var = tk.StringVar(
+            value=self.OPERATING_MODE_DISPLAY[self.determine_initial_operating_mode()])
+
+        op_mode_combo = ttk.Combobox(col3_frame, textvariable=self.operating_mode_var,
+                                     values=list(self.OPERATING_MODE_DISPLAY.values()),
+                                     state="readonly", width=15)
+        op_mode_combo.pack(anchor=tk.W, padx=10)
+        op_mode_combo.bind("<<ComboboxSelected>>", self.on_operating_mode_changed)
+
+        # Energie-Akkumulation Toggle
+        self.accumulator_enabled_var = tk.BooleanVar(
+            value=self.state.get("accumulator_enabled", True))
+
+        accumulator_check = tk.Checkbutton(
+            col3_frame, text="Energie-Akkumulation (alle 10s)",
+            variable=self.accumulator_enabled_var,
+            command=self.on_accumulator_toggle)
+        accumulator_check.pack(anchor=tk.W, padx=10, pady=(20, 5))
+
+        # 32-bit Register-Reihenfolge
+        int32_order_label = tk.Label(col3_frame, text="32-bit Register-Reihenfolge:",
+                                     font=("Arial", 10, "bold"))
+        int32_order_label.pack(pady=(20, 5))
+
+        self.int32_order_var = tk.StringVar(
+            value=self.state.get("int32_register_order", "high_first"))
+
+        tk.Radiobutton(col3_frame, text="High-Word zuerst", variable=self.int32_order_var,
+                      value="high_first", command=self.on_int32_order_changed).pack(anchor=tk.W, padx=10)
+        tk.Radiobutton(col3_frame, text="Low-Word zuerst", variable=self.int32_order_var,
+                      value="low_first", command=self.on_int32_order_changed).pack(anchor=tk.W, padx=10)
+
         # Log Filter
         filter_label = tk.Label(col3_frame, text="Log Filter:", 
                                font=("Arial", 10, "bold"))
@@ -306,7 +352,60 @@ class ModbusGUI:
                     frame_widget.pack(fill=tk.X, padx=5, pady=5, before=None)
                 else:
                     frame_widget.pack_forget()
-        
+
+        # Newly (de-)aktivierte Wärmepumpe(n) auf die aktuelle Betriebsart bringen
+        self.apply_operating_mode(self.state.get("operating_mode", "heating"))
+
+    def determine_initial_operating_mode(self):
+        """Ermittelt die Start-Betriebsart aus dem tatsächlich gespeicherten HP1-Register (1003),
+        statt aus dem separaten (ggf. fehlenden oder veralteten) 'operating_mode'-State-Key."""
+        hp1_state = get_register_value(self.state, 1003)
+        if hp1_state is None:
+            hp1_state = self.default_values.get(1003)
+
+        mode = MODES_BY_VALUE.get(hp1_state, self.state.get("operating_mode", "heating"))
+
+        self.state["operating_mode"] = mode
+        save_state(self.state)
+        return mode
+
+    def on_operating_mode_changed(self, event=None):
+        """Betriebsart wurde per Dropdown geändert."""
+        mode = self.OPERATING_MODE_DISPLAY_REVERSE[self.operating_mode_var.get()]
+        self.state["operating_mode"] = mode
+        save_state(self.state)
+        self.apply_operating_mode(mode)
+
+    def apply_operating_mode(self, mode):
+        """Setzt HP-, HC-, Boiler- und Buffer-Register aller aktiven WPs auf die Betriebsart."""
+        cascade = MODE_CASCADE[mode]
+        hp_indices = [1, 2] if self.wp_mode_var.get() == 2 else [1]
+
+        for idx in hp_indices:
+            offset = (idx - 1) * 100
+            self.set_register_value(1003 + offset, cascade["hp"])
+            self.set_register_value(5001 + offset, cascade["hc"])
+            self.set_register_value(2001 + offset, cascade["boiler"])
+            self.set_register_value(3001 + offset, cascade["buffer"])
+
+    def set_register_value(self, address, value):
+        """Setzt einen Register-Wert in State, Server und GUI-Combobox."""
+        if address not in REGISTER_MAPPINGS:
+            return
+
+        update_register_value(self.state, address, value)
+
+        if self.server_thread and self.server_thread.running:
+            self.server_thread.update_register_value(address, value)
+
+        var = self.register_vars.get(address)
+        if var is not None:
+            mapping = REGISTER_MAPPINGS[address]["mapping"]
+            if mapping and value in mapping:
+                var.set(f"{value} - {mapping[value]}")
+
+        self.add_log(f"Register {address} changed to {value} ({get_value_text(address, value)})")
+
     def start_server(self):
         """Starte den Modbus-Server."""
         self.start_btn.config(state=tk.DISABLED)
@@ -318,7 +417,8 @@ class ModbusGUI:
         
         self.add_log(f"Starting server with {len(filtered_registers)} registers (WP mode: {hp_mode})")
         
-        self.server_thread = ModbusServerThread(self.log_queue, filtered_registers)
+        self.server_thread = ModbusServerThread(self.log_queue, filtered_registers,
+                                                int32_order=self.int32_order_var.get())
         self.server_thread.start()
         
         self.add_log("Server started on port 5020")
@@ -342,38 +442,82 @@ class ModbusGUI:
         
         self.add_log("Server stopped")
         
+    def on_accumulator_toggle(self):
+        """Energie-Akkumulation wurde per Checkbox ein-/ausgeschaltet."""
+        enabled = self.accumulator_enabled_var.get()
+        self.state["accumulator_enabled"] = enabled
+        save_state(self.state)
+        self.add_log(f"Energie-Akkumulation {'aktiviert' if enabled else 'deaktiviert'}")
+
     def start_accumulator_timer(self):
         """Starte Timer für Auto-Inkrementierung (alle 10 Sekunden)."""
-        if self.server_thread and self.server_thread.running:
-            # Increment accumulator registers
-            accumulator_addrs = [1020, 1022]  # WP1
-            
-            if self.wp_mode_var.get() == 2:  # Add WP2
-                accumulator_addrs.extend([1120, 1122])
-            
-            for addr in accumulator_addrs:
-                # Read current 32-bit value correctly
-                current_high = get_register_value(self.state, addr, 0)
-                current_low = get_register_value(self.state, addr + 1, 0)
-                current_value = (current_high << 16) | current_low
-                
-                # Increment by 10 (as requested)
-                new_value = current_value + 10
-                
-                # Split back into high and low words
-                new_high = (new_value >> 16) & 0xFFFF
-                new_low = new_value & 0xFFFF
-                
-                # Update both registers
-                update_register_value(self.state, addr, new_high)
-                update_register_value(self.state, addr + 1, new_low)
-                
-                if self.server_thread:
-                    self.server_thread.update_register_value(addr, new_high)
-                    self.server_thread.update_register_value(addr + 1, new_low)
-        
-        # Schedule next update
-        self.accumulator_timer = self.root.after(10000, self.start_accumulator_timer)
+        try:
+            if (self.server_thread and self.server_thread.running
+                    and self.accumulator_enabled_var.get()):
+                electrical_addrs = [1020]  # compressor_power_consumption_accumulated
+                thermal_addrs = [1022]     # compressor_thermal_energy_output_accumulated
+
+                if self.wp_mode_var.get() == 2:  # Add WP2
+                    electrical_addrs.append(1120)
+                    thermal_addrs.append(1122)
+
+                for addr in electrical_addrs:
+                    self.increment_accumulator_register(addr, 10)
+                for addr in thermal_addrs:
+                    self.increment_accumulator_register(addr, 40)
+        finally:
+            # Timer immer weiterlaufen lassen, auch wenn eine Inkrementierung fehlschlägt
+            self.accumulator_timer = self.root.after(10000, self.start_accumulator_timer)
+
+    def increment_accumulator_register(self, addr, delta):
+        """Erhöht einen 32-bit Akkumulator-Registerwert (Worte bei addr/addr+1) um delta."""
+        order = self.int32_order_var.get()
+
+        word_a = get_register_value(self.state, addr, 0)
+        word_b = get_register_value(self.state, addr + 1, 0)
+        current_value = decode_32bit(word_a, word_b, order)
+
+        new_value = current_value + delta
+        new_word_a, new_word_b = encode_32bit(new_value, order)
+
+        # Update both registers
+        update_register_value(self.state, addr, new_word_a)
+        update_register_value(self.state, addr + 1, new_word_b)
+
+        if self.server_thread:
+            self.server_thread.update_register_value(addr, new_word_a)
+            self.server_thread.update_register_value(addr + 1, new_word_b)
+
+    def on_int32_order_changed(self):
+        """32-bit Register-Reihenfolge wurde per Radiobutton geändert."""
+        old_order = self.state.get("int32_register_order", "high_first")
+        new_order = self.int32_order_var.get()
+
+        self.state["int32_register_order"] = new_order
+        save_state(self.state)
+
+        if new_order != old_order:
+            self.reencode_32bit_registers(old_order, new_order)
+
+        self.add_log(f"32-bit Register-Reihenfolge geändert: {new_order}")
+
+    def reencode_32bit_registers(self, old_order, new_order):
+        """Schreibt alle 32-bit Register neu, sodass ihr Wert beim Wechsel der Wortreihenfolge erhalten bleibt."""
+        addresses = {reg['address'] for reg in self.registers
+                    if reg['type'] in ('int32', 'uint32')}
+
+        for addr in addresses:
+            word_a = get_register_value(self.state, addr, 0)
+            word_b = get_register_value(self.state, addr + 1, 0)
+            value = decode_32bit(word_a, word_b, old_order)
+
+            new_word_a, new_word_b = encode_32bit(value, new_order)
+            update_register_value(self.state, addr, new_word_a)
+            update_register_value(self.state, addr + 1, new_word_b)
+
+            if self.server_thread and self.server_thread.running:
+                self.server_thread.update_register_value(addr, new_word_a)
+                self.server_thread.update_register_value(addr + 1, new_word_b)
     
     def apply_log_filter(self):
         """Filter Log-Ausgabe."""

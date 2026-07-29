@@ -11,6 +11,8 @@ from pymodbus.constants import ExcCodes
 import yaml
 import os
 
+from register_manager import encode_32bit
+
 MODBUS_SERVER_PORT = 5020
 
 
@@ -127,19 +129,20 @@ class LoggingSlaveContext(ModbusDeviceContext):
 class ModbusServerThread(threading.Thread):
     """Thread für Modbus-Server."""
     
-    def __init__(self, log_queue, registers, port=5020):
+    def __init__(self, log_queue, registers, port=5020, int32_order="high_first"):
         super().__init__(daemon=True)
         self.log_queue = log_queue
         self.registers = registers
         self.port = port
+        self.int32_order = int32_order
         self.running = False
         self.context = None
-        
+
     def run(self):
         """Starte den Modbus-Server."""
         self.running = True
         try:
-            context = setup_modbus_server(self.registers, self.log_queue)
+            context = setup_modbus_server(self.registers, self.log_queue, self.int32_order)
             self.context = context
             
             StartTcpServer(
@@ -186,7 +189,7 @@ def load_registers(config_file):
         return sorted(registers, key=lambda x: x['address'])
 
 
-def setup_modbus_server(registers, log_queue=None):
+def setup_modbus_server(registers, log_queue=None, int32_order="high_first"):
     """Setup Modbus Server mit Logging."""
     # Build set of valid addresses
     valid_addresses = set()
@@ -251,12 +254,10 @@ def setup_modbus_server(registers, log_queue=None):
         mode = reg['mode']
         value = int(reg['initial_value'])
         
-        # Handle 32-bit values - Big-Endian format
+        # Handle 32-bit values (word order konfigurierbar)
         if reg_type in ['int32', 'uint32']:
-            # Big-Endian: High word first, then low word
-            high_word = (value >> 16) & 0xFFFF
-            low_word = value & 0xFFFF
-            values = [high_word, low_word]
+            word_a, word_b = encode_32bit(value, int32_order)
+            values = [word_a, word_b]
         else:
             values = [value]
         

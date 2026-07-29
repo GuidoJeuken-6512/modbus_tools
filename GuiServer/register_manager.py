@@ -179,3 +179,19 @@ def update_accumulated_value(state, address, value):
 def get_accumulated_value(state, address, default_value=0):
     """Holt einen Akkumulator-Wert aus dem State."""
     return state["last_accumulated_values"].get(str(address), default_value)
+
+def encode_32bit(value, order="high_first"):
+    """Zerlegt einen 32-bit Wert in zwei 16-bit Worte (word_at_addr, word_at_addr_plus_1)."""
+    high = (value >> 16) & 0xFFFF
+    low = value & 0xFFFF
+    if order == "low_first":
+        return low, high
+    return high, low
+
+def decode_32bit(word_at_addr, word_at_addr_plus_1, order="high_first"):
+    """Setzt zwei 16-bit Worte (bei addr/addr+1) zu einem 32-bit Wert zusammen."""
+    if order == "low_first":
+        low, high = word_at_addr, word_at_addr_plus_1
+    else:
+        high, low = word_at_addr, word_at_addr_plus_1
+    return (high << 16) | low

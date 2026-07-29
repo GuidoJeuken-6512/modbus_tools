@@ -1,7 +1,27 @@
 {
   "heat_pump_mode": 2,
   "registers": {
-    "2001": 1
+    "2001": 0,
+    "1020": 0,
+    "1021": 1550,
+    "1120": 0,
+    "1121": 1550,
+    "1022": 0,
+    "1023": 6200,
+    "1122": 0,
+    "1123": 6200,
+    "1003": 1,
+    "5001": 0,
+    "3001": 1,
+    "1103": 1,
+    "5101": 0,
+    "2101": 0,
+    "3101": 1,
+    "4005": 0,
+    "4006": 0
   },
-  "last_accumulated_values": {}
+  "last_accumulated_values": {},
+  "operating_mode": "heating",
+  "int32_register_order": "high_first",
+  "accumulator_enabled": false
 }
