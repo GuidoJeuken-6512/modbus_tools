@@ -60,9 +60,13 @@ This project contains Modbus client tools, a Modbus server with GUI, and a few h
 - Configurable word order (high-word-first / low-word-first) for 32-bit registers
 
 **Auto-increment:**
-- Accumulator registers (power consumption, thermal energy) increase by 1 every 10 seconds
+- Accumulator registers (power consumption, thermal energy) increase every 10 seconds
+- Can be switched on and off via the "Energie-Akkumulation (alle 10s)" checkbox
+- The increment per interval is editable in the GUI, separately for electrical (registers 1020/1120) and thermal (1022/1122) energy
+- Defaults: 10 (electrical) and 40 (thermal); edits take effect immediately with the next interval, no server restart required
+- Invalid input (empty, non-numeric, negative) marks the field red and keeps the previous value active
 - Works for HP1 and (if enabled) HP2
-- Values are persisted
+- Values and the configured increments are persisted (`electrical_increment` / `thermal_increment` in `server_state.json`)
 
 **Live logging:**
 - Displays all Modbus read/write operations
@@ -78,7 +82,7 @@ This project contains Modbus client tools, a Modbus server with GUI, and a few h
 **Three-column layout:**
 - Column 1: HP1 + shared components (ambient, solar, boiler 1, buffer 1, HC 1, E-manager)
 - Column 2: HP2 components (boiler 2, buffer 2, HC 2) - hidden in 1-HP mode
-- Column 3: HP mode switch and log filter
+- Column 3: HP mode switch, operating mode, accumulator settings (on/off plus the electrical and thermal increment fields), 32-bit word order, and log filter
 - Bottom: log output spanning the full width
 
 #### Using the GUI version:
@@ -95,7 +99,7 @@ python GuiServer.py
 4. Click "Start Server"
 5. Modbus server runs on port 5020 with slave ID 1
 6. All changes are applied immediately
-7. Accumulators increase automatically every 10 seconds
+7. Accumulators increase automatically every 10 seconds by the increments configured in column 3
 
 **Persistence:**
 - All configuration is stored in `GuiServer/server_state.json`
@@ -217,9 +221,13 @@ Dieses Projekt enthält Modbus-Client-Werkzeuge, einen Modbus-Server mit GUI sow
 - Konfigurierbare Wortreihenfolge (High-Word-first / Low-Word-first) für 32-Bit-Register
 
 **Auto-Inkrementierung:**
-- Akkumulator-Register (Power Consumption, Thermal Energy) erhöhen sich alle 10 Sekunden um 1
+- Akkumulator-Register (Power Consumption, Thermal Energy) erhöhen sich alle 10 Sekunden
+- Über die Checkbox "Energie-Akkumulation (alle 10s)" ein- und ausschaltbar
+- Das Inkrement pro Intervall ist in der GUI editierbar, getrennt für elektrische (Register 1020/1120) und thermische Energie (1022/1122)
+- Standardwerte: 10 (elektrisch) und 40 (thermisch); Änderungen wirken sofort ab dem nächsten Intervall, ohne Server-Neustart
+- Ungültige Eingaben (leer, nicht numerisch, negativ) färben das Feld rot, der bisherige Wert bleibt aktiv
 - Funktioniert für WP1 und (bei aktiviert) WP2
-- Werte werden persistent gespeichert
+- Werte und eingestellte Inkremente werden persistent gespeichert (`electrical_increment` / `thermal_increment` in `server_state.json`)
 
 **Live-Logging:**
 - Anzeige aller Modbus Read/Write-Operationen
@@ -235,7 +243,7 @@ Dieses Projekt enthält Modbus-Client-Werkzeuge, einen Modbus-Server mit GUI sow
 **Dreispaltiges Layout:**
 - Spalte 1: WP1 + gemeinsame Komponenten (Ambient, Solar, Boiler 1, Buffer 1, HC 1, E-Manager)
 - Spalte 2: WP2-Komponenten (Boiler 2, Buffer 2, HC 2) - ausgeblendet bei 1-WP-Modus
-- Spalte 3: WP-Modus-Schalter und Log-Filter
+- Spalte 3: WP-Modus-Schalter, Betriebsart, Akkumulator-Einstellungen (An/Aus sowie die Eingabefelder für elektrisches und thermisches Inkrement), 32-Bit-Wortreihenfolge und Log-Filter
 - Unten: Log-Ausgabe über volle Breite
 
 #### Verwendung der GUI-Version:
@@ -252,7 +260,7 @@ python GuiServer.py
 4. Klicken Sie "Start Server"
 5. Modbus-Server läuft auf Port 5020 mit Slave ID 1
 6. Alle Änderungen werden sofort übernommen
-7. Akkumulatoren erhöhen sich automatisch alle 10 Sekunden
+7. Akkumulatoren erhöhen sich automatisch alle 10 Sekunden um die in Spalte 3 eingestellten Inkremente
 
 **Speicherung:**
 - Alle Konfigurationen werden in `GuiServer/server_state.json` gespeichert

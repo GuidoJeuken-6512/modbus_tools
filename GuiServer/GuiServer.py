@@ -26,6 +26,15 @@ class ModbusGUI:
     }
     OPERATING_MODE_DISPLAY_REVERSE = {v: k for k, v in OPERATING_MODE_DISPLAY.items()}
 
+    DEFAULT_INCREMENTS = {
+        "electrical_increment": 10,
+        "thermal_increment": 40,
+    }
+    INCREMENT_LABELS = {
+        "electrical_increment": "Elektrisches Inkrement",
+        "thermal_increment": "Thermisches Inkrement",
+    }
+
     def __init__(self, root):
         self.root = root
         self.root.title("Modbus Server GUI")
@@ -156,6 +165,15 @@ class ModbusGUI:
             variable=self.accumulator_enabled_var,
             command=self.on_accumulator_toggle)
         accumulator_check.pack(anchor=tk.W, padx=10, pady=(20, 5))
+
+        # Inkremente pro Akkumulations-Intervall (sofort wirksam)
+        increment_label = tk.Label(col3_frame, text="Inkrement pro Intervall:",
+                                   font=("Arial", 10, "bold"))
+        increment_label.pack(pady=(10, 5))
+
+        self.increment_vars = {}
+        self.create_increment_control(col3_frame, "Elektrisch:", "electrical_increment")
+        self.create_increment_control(col3_frame, "Thermisch:", "thermal_increment")
 
         # 32-bit Register-Reihenfolge
         int32_order_label = tk.Label(col3_frame, text="32-bit Register-Reihenfolge:",
@@ -456,6 +474,47 @@ class ModbusGUI:
         save_state(self.state)
         self.add_log(f"Energie-Akkumulation {'aktiviert' if enabled else 'deaktiviert'}")
 
+    def create_increment_control(self, parent, label_text, state_key):
+        """Erstelle ein Eingabefeld für einen Akkumulator-Inkrementwert."""
+        frame = tk.Frame(parent)
+        frame.pack(fill=tk.X, padx=10, pady=2)
+
+        tk.Label(frame, text=label_text, width=11, anchor=tk.W).pack(side=tk.LEFT)
+
+        var = tk.StringVar(value=str(self.get_increment(state_key)))
+        self.increment_vars[state_key] = var
+
+        entry = tk.Entry(frame, textvariable=var, width=8)
+        entry.pack(side=tk.LEFT)
+
+        var.trace_add("write",
+                      lambda *_: self.on_increment_changed(state_key, entry))
+
+    def get_increment(self, state_key):
+        """Liefert den aktuellen Inkrementwert aus dem State."""
+        return self.state.get(state_key, self.DEFAULT_INCREMENTS[state_key])
+
+    def on_increment_changed(self, state_key, entry):
+        """Inkrementwert wurde bearbeitet - gültige Werte sofort übernehmen."""
+        text = self.increment_vars[state_key].get().strip()
+
+        try:
+            value = int(text)
+            if value < 0:
+                raise ValueError(text)
+        except ValueError:
+            entry.config(bg="#ffcccc")  # ungültige Eingabe markieren, alten Wert behalten
+            return
+
+        entry.config(bg="white")
+
+        if self.get_increment(state_key) == value:
+            return
+
+        self.state[state_key] = value
+        save_state(self.state)
+        self.add_log(f"{self.INCREMENT_LABELS[state_key]} auf {value} gesetzt")
+
     def start_accumulator_timer(self):
         """Starte Timer für Auto-Inkrementierung (alle 10 Sekunden)."""
         try:
@@ -469,9 +528,11 @@ class ModbusGUI:
                     thermal_addrs.append(1122)
 
                 for addr in electrical_addrs:
-                    self.increment_accumulator_register(addr, 10)
+                    self.increment_accumulator_register(
+                        addr, self.get_increment("electrical_increment"))
                 for addr in thermal_addrs:
-                    self.increment_accumulator_register(addr, 40)
+                    self.increment_accumulator_register(
+                        addr, self.get_increment("thermal_increment"))
         finally:
             # Timer immer weiterlaufen lassen, auch wenn eine Inkrementierung fehlschlägt
             self.accumulator_timer = self.root.after(10000, self.start_accumulator_timer)

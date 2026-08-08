@@ -5,4 +5,3 @@ __pycache__/
 .vscode/settings.json
 GuiServer/server_state.json
 .claude/settings.json
-GuiServer/__pycache__/server_threaded.cpython-313.pyc

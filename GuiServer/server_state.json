@@ -1,5 +1,5 @@
 {
-  "heat_pump_mode": 2,
+  "heat_pump_mode": 1,
   "registers": {
     "1003": 3,
     "2001": 0,
@@ -8,13 +8,13 @@
     "1": 1,
     "1000": 0,
     "1002": 3,
-    "1020": 24984,
-    "1022": 60684,
+    "1020": 33354,
+    "1022": 28628,
     "1120": 12224,
     "1122": 16574,
     "1103": 3,
     "1021": 838,
-    "1023": 838,
+    "1023": 839,
     "1121": 262,
     "1123": 261,
     "5101": 2,
@@ -25,5 +25,7 @@
   },
   "last_accumulated_values": {},
   "operating_mode": "cooling",
-  "int32_register_order": "low_first"
+  "int32_register_order": "low_first",
+  "electrical_increment": 10,
+  "thermal_increment": 40
 }
